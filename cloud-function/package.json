@@ -1,0 +1,9 @@
+{
+  "name": "knowtime-analytics",
+  "version": "1.0.0",
+  "description": "知时App埋点数据接收服务 - 华为云函数",
+  "main": "index.js",
+  "dependencies": {
+    "@huawei-cloud/huawei-cloud-function": "^1.0.0"
+  }
+}

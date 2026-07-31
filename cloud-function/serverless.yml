@@ -1,0 +1,38 @@
+# 华为云 FunctionGraph Serverless 部署配置
+# 使用 Serverless Devs 工具一键部署
+# 安装: npm install -g @serverless-devs/s
+# 配置: s config add (选择华为云)
+
+edition: 1.0.0
+name: knowtime-analytics
+access: "default"
+
+vars:
+  region: "cn-north-4"
+  functionName: "knowtime-analytics"
+
+services:
+  knowtime-analytics:
+    component: fc
+    props:
+      region: ${vars.region}
+      service:
+        name: "knowtime-service"
+        description: "知时埋点服务"
+      function:
+        name: ${vars.functionName}
+        description: "知时App埋点数据接收"
+        runtime: "Node.js18"
+        handler: "index.handler"
+        memorySize: 256
+        timeout: 10
+        codeUri: "./"
+      triggers:
+        - triggerTypeCode: "APIG"
+          triggerName: "knowtime-api"
+          apiGroup:
+            name: "knowtime-group"
+            protocol: "HTTPS"
+          requestConfig:
+            method: "POST"
+            path: "/analytics"

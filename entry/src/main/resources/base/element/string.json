@@ -1,0 +1,20 @@
+{
+  "string": [
+    {
+      "name": "module_desc",
+      "value": "知时 - 时间感知型深度专注助手"
+    },
+    {
+      "name": "EntryAbility_desc",
+      "value": "知时专注助手"
+    },
+    {
+      "name": "EntryAbility_label",
+      "value": "知时"
+    },
+    {
+      "name": "form_desc",
+      "value": "知时服务卡片"
+    }
+  ]
+}
