@@ -3,6 +3,7 @@ import { hilog } from '@kit.PerformanceAnalysisKit'
 import { window } from '@kit.ArkUI'
 import { common } from '@kit.AbilityKit'
 import { AnalyticsService } from '../analytics/AnalyticsService'
+import notificationManager from '@ohos.notificationManager'
 
 const DOMAIN = 0x0000
 
@@ -15,7 +16,26 @@ export default class EntryAbility extends UIAbility {
     }
     // 初始化埋点服务
     AnalyticsService.getInstance().init(this.context as common.UIAbilityContext)
+    // 注册通知槽位（支持响铃）
+    this.initNotificationSlot()
     hilog.info(DOMAIN, 'testTag', '%{public}s', 'Ability onCreate')
+  }
+
+  private initNotificationSlot(): void {
+    try {
+      notificationManager.addSlot(
+        notificationManager.SlotType.SOCIAL_COMMUNICATION,
+        (err: Error) => {
+          if (err) {
+            hilog.error(DOMAIN, 'testTag', 'Failed to add notification slot: %{public}s', JSON.stringify(err))
+          } else {
+            hilog.info(DOMAIN, 'testTag', 'Notification slot added successfully')
+          }
+        }
+      )
+    } catch (err) {
+      hilog.error(DOMAIN, 'testTag', 'addSlot error: %{public}s', JSON.stringify(err))
+    }
   }
 
   onDestroy(): void {

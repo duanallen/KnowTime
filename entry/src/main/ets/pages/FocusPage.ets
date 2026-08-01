@@ -10,6 +10,8 @@ export struct FocusPage {
   @State taskName: string = '深度学习'
   @State selectedTag: string = '学习'
   @State selectedDuration: number = 25
+  @State showCustomDurationDialog: boolean = false
+  @State customDurationInput: string = ''
   private durationOptions: number[] = [15, 25, 45, 60, 90]
   private tagOptions: string[] = ['学习', '工作', '阅读', '写作', '编程', '设计', '运动']
   private viewModel: FocusViewModel = new FocusViewModel()
@@ -132,6 +134,20 @@ export struct FocusPage {
                     if (!this.isLocked()) { this.selectedDuration = duration }
                   })
               })
+
+              // 自定义时长按钮
+              if (!this.isLocked()) {
+                Text(this.durationOptions.includes(this.selectedDuration) ? '自定义' : `${this.selectedDuration} 分钟`)
+                  .fontSize(13)
+                  .padding({ left: 16, right: 16, top: 8, bottom: 8 }).margin({ right: 8, bottom: 8 })
+                  .fontColor(this.durationOptions.includes(this.selectedDuration) ? '#64748B' : '#FFFFFF')
+                  .backgroundColor(this.durationOptions.includes(this.selectedDuration) ? '#F1F5F9' : AppColors.PRIMARY)
+                  .borderRadius(20)
+                  .onClick(() => {
+                    this.showCustomDurationDialog = true
+                    this.customDurationInput = this.selectedDuration.toString()
+                  })
+              }
             }
             .width('100%')
           }
@@ -193,6 +209,55 @@ export struct FocusPage {
         .padding({ left: 24, right: 24, bottom: 40 })
       }
       .layoutWeight(1).scrollBar(BarState.Off)
+
+      // 自定义时长弹窗
+      if (this.showCustomDurationDialog) {
+        Stack({ alignContent: Alignment.Center }) {
+          Column({ space: 20 }) {
+            Text('自定义时长')
+              .fontSize(18).fontWeight(FontWeight.Bold).fontColor('#1E293B')
+            Text('设置专注时长（1-180 分钟）')
+              .fontSize(13).fontColor('#94A3B8').margin({ top: -12 })
+            TextInput({ text: $$this.customDurationInput, placeholder: '输入分钟数' })
+              .fontSize(28).fontWeight(FontWeight.Bold).fontColor('#1E293B')
+              .type(InputType.Number).maxLength(3)
+              .textAlign(TextAlign.Center)
+              .width('60%').height(48)
+              .backgroundColor('#F1F5F9').borderRadius(12)
+              .onChange((value: string) => {
+                this.customDurationInput = value.replace(/[^0-9]/g, '')
+              })
+            Row({ space: 12 }) {
+              Button('取消')
+                .fontSize(14).fontColor('#64748B')
+                .backgroundColor('#F1F5F9').borderRadius(22).height(44).layoutWeight(1)
+                .onClick(() => {
+                  this.showCustomDurationDialog = false
+                })
+              Button('确定')
+                .fontSize(14).fontWeight(FontWeight.Bold).fontColor('#FFFFFF')
+                .backgroundColor(AppColors.PRIMARY).borderRadius(22).height(44).layoutWeight(1)
+                .onClick(() => {
+                  const val = parseInt(this.customDurationInput)
+                  if (!isNaN(val) && val >= 1 && val <= 180) {
+                    this.selectedDuration = val
+                    this.showCustomDurationDialog = false
+                  }
+                })
+            }
+            .width('100%')
+          }
+          .width('78%').padding(24)
+          .backgroundColor('#FFFFFF').borderRadius(20)
+          .shadow({ radius: 20, color: '#00000020' })
+        }
+        .width('100%').height('100%')
+        .backgroundColor('#00000050')
+        .position({ x: 0, y: 0 })
+        .onClick(() => {
+          this.showCustomDurationDialog = false
+        })
+      }
     }
     .width('100%').height('100%').backgroundColor('#F8FAFC')
   }
