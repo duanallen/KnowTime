@@ -131,21 +131,24 @@ export struct StatsPage {
           if (this.dailyList.length > 0) {
             Column({ space: 10 }) {
               Text(`${this.getLabel()}分布`).fontSize(15).fontWeight(FontWeight.Medium).fontColor('#1E293B')
-              Row({ space: 2 }) {
-                ForEach(this.dailyList, (item: DailyStats) => {
-                  Column({ space: 2 }) {
-                    Column() {}
-                      .width(this.selectedTab === '日' ? 40 : this.selectedTab === '周' ? 36 : 18)
-                      .height(Math.max(4, (item.totalMinutes / Math.max(this.getMaxDailyMinutes(), 1)) * 100))
-                      .backgroundColor(item.totalMinutes > 0 ? '#1A73E8' : '#E2E8F0')
-                      .borderRadius(3)
-                    Text(item.totalMinutes > 0 ? `${item.totalMinutes}` : '')
-                      .fontSize(8).fontColor('#94A3B8')
-                  }
-                  .alignItems(HorizontalAlign.Center)
-                })
+              Scroll() {
+                Row({ space: 2 }) {
+                  ForEach(this.dailyList, (item: DailyStats) => {
+                    Column({ space: 2 }) {
+                      Column() {}
+                        .width(14)
+                        .height(Math.max(4, (item.totalMinutes / Math.max(this.getMaxDailyMinutes(), 1)) * 100))
+                        .backgroundColor(item.totalMinutes > 0 ? '#1A73E8' : '#E2E8F0')
+                        .borderRadius(3)
+                      Text(item.totalMinutes > 0 ? `${item.totalMinutes}` : '')
+                        .fontSize(7).fontColor('#94A3B8').maxLines(1)
+                    }
+                    .alignItems(HorizontalAlign.Center)
+                  })
+                }
+                .height(120).alignItems(VerticalAlign.Bottom).padding({ left: 2, right: 2 })
               }
-              .width('100%').height(120).alignItems(VerticalAlign.Bottom)
+              .width('100%').height(130).scrollable(ScrollDirection.Horizontal).scrollBar(BarState.Off)
             }
             .width('100%').padding(20).backgroundColor('#FFFFFF').borderRadius(16)
           }
@@ -153,20 +156,23 @@ export struct StatsPage {
           if (this.hourlyDist.some((v: number) => v > 0)) {
             Column({ space: 10 }) {
               Text('时段分布').fontSize(15).fontWeight(FontWeight.Medium).fontColor('#1E293B')
-              Row({ space: 1 }) {
-                ForEach(this.hourlyDist, (val: number, idx: number) => {
-                  Column({ space: 2 }) {
-                    Column() {}
-                      .width(12)
-                      .height(Math.max(2, (val / Math.max(...this.hourlyDist, 1)) * 60))
-                      .backgroundColor(val > 0 ? '#3B82F6' : '#F1F5F9')
-                      .borderRadius(2)
-                    if (idx % 3 === 0) { Text(`${idx}`).fontSize(7).fontColor('#CBD5E1') }
-                  }
-                  .alignItems(HorizontalAlign.Center)
-                })
+              Scroll() {
+                Row({ space: 1 }) {
+                  ForEach(this.hourlyDist, (val: number, idx: number) => {
+                    Column({ space: 2 }) {
+                      Column() {}
+                        .width(10)
+                        .height(Math.max(2, (val / Math.max(...this.hourlyDist, 1)) * 60))
+                        .backgroundColor(val > 0 ? '#3B82F6' : '#F1F5F9')
+                        .borderRadius(2)
+                      if (idx % 2 === 0) { Text(`${idx}`).fontSize(7).fontColor('#CBD5E1') }
+                    }
+                    .alignItems(HorizontalAlign.Center)
+                  })
+                }
+                .height(80).alignItems(VerticalAlign.Bottom).padding({ left: 2, right: 2 })
               }
-              .width('100%').height(80).alignItems(VerticalAlign.Bottom)
+              .width('100%').height(90).scrollable(ScrollDirection.Horizontal).scrollBar(BarState.Off)
             }
             .width('100%').padding(20).backgroundColor('#FFFFFF').borderRadius(16)
           }
