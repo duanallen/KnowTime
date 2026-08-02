@@ -31,6 +31,13 @@ export struct FocusPage {
   // 刷新机制 - 当此值变化时触发今日统计刷新
   @Prop @Watch('onRefresh') refreshKey: number = 0
   
+  // 记录之前的专注状态，用于判断是否完成
+  private previousFocusState: FocusState = FocusState.IDLE
+  // 状态检查定时器
+  private stateCheckTimerId: number = -1
+  // 防止重复刷新的标记
+  private isRefreshing: boolean = false
+  
   async aboutToAppear(): Promise<void> {
     const ctx = getContext(this) as common.UIAbilityContext
     hilog.info(DOMAIN, TAG, 'aboutToAppear start')
@@ -51,9 +58,19 @@ export struct FocusPage {
     } catch (e) {
       hilog.error(DOMAIN, TAG, 'viewModel.init failed: %{public}s', (e as Error).message)
     }
+    
+    // 启动状态检查定时器，每500ms检查一次专注状态
+    this.stateCheckTimerId = setInterval(() => {
+      this.syncTimerState()
+    }, 500)
   }
   
   aboutToDisappear(): void {
+    // 停止状态检查定时器
+    if (this.stateCheckTimerId !== -1) {
+      clearInterval(this.stateCheckTimerId)
+      this.stateCheckTimerId = -1
+    }
     this.viewModel.reset()
   }
   
@@ -78,7 +95,6 @@ export struct FocusPage {
     hilog.info(DOMAIN, TAG, 'onRefresh triggered')
     this.loadTodayStats(false)  // 后续刷新不需要 setTimeout
   }
-  
   // 加载今日统计数据 - 从数据库直接查询
   private async loadTodayStats(useDelay: boolean = false): Promise<void> {
     try {
@@ -116,14 +132,26 @@ export struct FocusPage {
     }
   }
   
-  // 同步计时状态 - 只同步计时器相关状态，不覆盖统计数据
+  // 同步计时状态 - 当专注完成时刷新今日统计
   private syncTimerState(): void {
-    if (this.viewModel.focusState === FocusState.IDLE && 
-        this.dailyTotalMinutes === 0 && this.todaySessionsCount === 0) {
-      // 仅在完成状态且统计数据为空时触发加载
-      hilog.info(DOMAIN, TAG, 'syncTimerState: triggering loadTodayStats')
-      this.loadTodayStats(false)
+    const currentFocusState = this.viewModel.focusState
+    
+    // 当从运行/暂停状态变为空闲状态时，说明专注完成了
+    if (currentFocusState === FocusState.IDLE && 
+        (this.previousFocusState === FocusState.RUNNING || this.previousFocusState === FocusState.PAUSED)) {
+      hilog.info(DOMAIN, TAG, 'Focus completed, refreshing today stats')
+      // 防止重复刷新
+      if (!this.isRefreshing) {
+        this.isRefreshing = true
+        // 延迟刷新，确保数据库操作完成
+        setTimeout(() => {
+          this.loadTodayStats(false)
+          this.isRefreshing = false
+        }, 300)
+      }
     }
+    
+    this.previousFocusState = currentFocusState
   }
 
   build() {
