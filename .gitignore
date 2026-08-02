@@ -9,6 +9,17 @@ oh_modules/
 .settings/
 .hvigor/
 .idea/
+.trae/
+.zcode/
+
+# Local configuration
+local.properties
+
+# Backup files
+*.bak
+
+# Documentation
+"BUG记录.txt"
 
 # Executables
 *.swf
