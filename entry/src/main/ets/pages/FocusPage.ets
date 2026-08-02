@@ -190,14 +190,15 @@ export struct FocusPage {
       // 主要内容 - 可滚动区域
       Scroll() {
         Column({ space: 20 }) {
-          // 计时器 - 漏沙效果
+          // 计时器 - 缩小
           Column({ space: 6 }) {
             Stack({ alignContent: Alignment.Center }) {
-              Hourglass({
+              TimerRing({
                 elapsedSeconds: this.viewModel.focusState === FocusState.RUNNING ? this.viewModel.elapsedSeconds : 0,
                 totalSeconds: this.selectedDuration * 60,
-                sandColor: this.getStatusColor(),
-                hourglassSize: 180
+                ringColor: this.getStatusColor(),
+                ringWidth: 12,
+                ringSize: 180
               })
 
               Column({ space: 4 }) {
