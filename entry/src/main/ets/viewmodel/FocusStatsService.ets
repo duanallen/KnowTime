@@ -171,6 +171,10 @@ export class FocusStatsService {
       const h = new Date(sessions[i].startTime).getHours()
       hours[h] += sessions[i].actualDuration
     }
+    // 统一转换为分钟，确保与其他统计方法一致
+    for (let i = 0; i < hours.length; i++) {
+      hours[i] = Math.floor(hours[i] / 60)
+    }
     return hours
   }
 
