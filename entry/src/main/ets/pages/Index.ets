@@ -27,7 +27,7 @@ struct Index {
   build() {
     Column() {
       Tabs({ index: $$this.currentTabIndex }) {
-        TabContent() { FocusPage() }
+        TabContent() { FocusPage({ refreshKey: this.refreshKey }) }
         TabContent() { StatsPage({ refreshKey: this.refreshKey }) }
         TabContent() { SettingsPage({ refreshKey: this.refreshKey }) }
         TabContent() { ProfilePage({ refreshKey: this.refreshKey }) }
