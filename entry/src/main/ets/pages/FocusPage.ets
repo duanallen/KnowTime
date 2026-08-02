@@ -1,7 +1,7 @@
 import { FocusViewModel } from '../viewmodel/FocusViewModel'
 import { FocusState, SessionType } from '../models/FocusSession'
 import { AppColors } from '../common/Theme'
-import { HourglassBasic } from '../components/HourglassBasic'  // 确认导出名称
+import { HourglassBasic } from '../components/HourglassBasic'  // 使用基础版
 import { common } from '@kit.AbilityKit'
 import { hilog } from '@kit.PerformanceAnalysisKit'
 import { DatabaseHelper } from '../database/DatabaseHelper'
@@ -193,7 +193,7 @@ export struct FocusPage {
 // 计时器 - 漏沙效果
           Column({ space: 6 }) {
             Stack({ alignContent: Alignment.Center }) {
-              HourglassBasic({  // 确认使用正确的组件名
+              HourglassBasic({
                 elapsedSeconds: this.viewModel.focusState === FocusState.RUNNING ? this.viewModel.elapsedSeconds : 0,
                 totalSeconds: this.selectedDuration * 60,
                 sandColor: this.getStatusColor(),
