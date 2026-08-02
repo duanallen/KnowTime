@@ -116,8 +116,11 @@ export class DatabaseHelper {
     const dist: Record<string, number> = {}
     for (let i = 0; i < list.length; i++) {
       const tag = list[i].tag
-      const mins = Math.floor(list[i].actualDuration / 60)
-      dist[tag] = (dist[tag] || 0) + mins
+      dist[tag] = (dist[tag] || 0) + list[i].actualDuration
+    }
+    // 统一转换为分钟，确保与getTotalMinutes逻辑一致
+    for (const tag in dist) {
+      dist[tag] = Math.floor(dist[tag] / 60)
     }
     return dist
   }
