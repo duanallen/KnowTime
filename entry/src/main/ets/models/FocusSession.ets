@@ -6,7 +6,8 @@ export enum FocusState {
   RUNNING = 'RUNNING',
   PAUSED = 'PAUSED',
   COMPLETED = 'COMPLETED',
-  INTERRUPTED = 'INTERRUPTED'
+  INTERRUPTED = 'INTERRUPTED',
+  REMINDING = 'REMINDING'
 }
 
 export enum SessionType {

@@ -5,6 +5,7 @@ import { TimerRing } from '../components/TimerRing'
 import { common } from '@kit.AbilityKit'
 import { hilog } from '@kit.PerformanceAnalysisKit'
 import { DatabaseHelper } from '../database/DatabaseHelper'
+import vibrator from '@ohos.vibrator'
 
 const DOMAIN = 0x0001
 const TAG = 'FocusPage'
@@ -22,6 +23,8 @@ export struct FocusPage {
   @State dailyTotalMinutes: number = 0
   @State todaySessionsCount: number = 0
   @State maxFlowScore: number = 0
+  // 停止按钮状态
+  @State showStopButton: boolean = false
   
   private durationOptions: number[] = [15, 25, 45, 60, 90]
   private tagOptions: string[] = ['学习', '工作', '阅读', '写作', '编程', '设计', '运动']
@@ -47,6 +50,14 @@ export struct FocusPage {
       hilog.info(DOMAIN, TAG, 'db.init done')
     } catch (e) {
       hilog.error(DOMAIN, TAG, 'db.init failed: %{public}s', (e as Error).message)
+    }
+    
+    // 检查权限
+    try {
+      const hasPermission = await this.viewModel.checkPermissions()
+      hilog.info(DOMAIN, TAG, 'Permission check done: %{public}s', hasPermission ? 'granted' : 'denied')
+    } catch (e) {
+      hilog.error(DOMAIN, TAG, 'Permission check failed: %{public}s', (e as Error).message)
     }
     
     await this.loadTodayStats(true)  // 首次加载用 setTimeout(0) 确保刷新
@@ -81,12 +92,14 @@ export struct FocusPage {
   private getStatusText(): string {
     if (this.viewModel.focusState === FocusState.RUNNING) return '专注中'
     if (this.viewModel.focusState === FocusState.PAUSED) return '已暂停'
+    if (this.viewModel.focusState === FocusState.REMINDING) return '专注已完成'
     return ''
   }
   
   private getStatusColor(): string {
     if (this.viewModel.focusState === FocusState.RUNNING) return AppColors.FOCUS_ACTIVE
     if (this.viewModel.focusState === FocusState.PAUSED) return AppColors.REST
+    if (this.viewModel.focusState === FocusState.REMINDING) return '#FF5252'
     return AppColors.PRIMARY
   }
   
@@ -151,14 +164,24 @@ export struct FocusPage {
       }
     }
     
+    // 更新提醒状态
+    this.checkReminderState()
+    
     this.previousFocusState = currentFocusState
+  }
+  
+  // 检查提醒状态
+  private checkReminderState(): void {
+    this.showStopButton = this.viewModel.isReminding
   }
 
   build() {
-    Column() {
-      // 顶部今日统计 - 一屏显示，无需滚动
-      if (this.todaySessionsCount > 0) {
-        Column({ space: 12 }) {
+    Stack() {
+      // 主内容容器
+      Column() {
+        // 顶部今日统计 - 一屏显示，无需滚动
+        if (this.todaySessionsCount > 0) {
+          Column({ space: 12 }) {
           Text('今日')
             .fontSize(13).fontWeight(FontWeight.Medium).fontColor('#1E293B')
             .textAlign(TextAlign.Center)
@@ -224,9 +247,12 @@ export struct FocusPage {
 
           // 任务输入（专注中也允许修改任务名）
           Row() {
-            TextInput({ text: $$this.taskName, placeholder: '正在做什么？' })
+            TextInput({ placeholder: '正在做什么？' })
               .fontSize(16).fontColor('#334155').placeholderColor('#CBD5E1')
               .backgroundColor(Color.Transparent).borderRadius(0).layoutWeight(1).height(40)
+              .onChange((value: string) => {
+                this.taskName = value
+              })
           }
           .width('100%').padding({ left: 16, right: 16 })
           .backgroundColor('#FFFFFF').borderRadius(12)
@@ -330,6 +356,7 @@ export struct FocusPage {
               }
               .width('100%')
             }
+            // REMINDING 状态不显示按钮，因为会显示覆盖层
           }
 
           Blank().height(16)
@@ -346,7 +373,7 @@ export struct FocusPage {
               .fontSize(18).fontWeight(FontWeight.Bold).fontColor('#1E293B')
             Text('设置专注时长（1-180 分钟）')
               .fontSize(13).fontColor('#94A3B8').margin({ top: -12 })
-            TextInput({ text: $$this.customDurationInput, placeholder: '输入分钟数' })
+            TextInput({ placeholder: '输入分钟数' })
               .fontSize(28).fontWeight(FontWeight.Bold).fontColor('#1E293B')
               .type(InputType.Number).maxLength(3)
               .textAlign(TextAlign.Center)
@@ -388,8 +415,43 @@ export struct FocusPage {
       }
     }
     .width('100%').height('100%').backgroundColor('#F8FAFC')
-  }
-
+    
+    // 停止按钮覆盖层
+      if (this.showStopButton) {
+        Stack() {
+          // 半透明遮罩
+          Rect()
+            .fill('#00000080')
+            .width('100%')
+            .height('100%')
+          
+          Column() {
+            Text('专注已完成')
+              .fontSize(20).fontWeight(FontWeight.Bold)
+              .fontColor('#FFFFFF').margin({ bottom: 16 })
+            
+            Text('点击停止提醒')
+              .fontSize(14).fontColor('#000000')
+            
+            Button('停止提醒')
+              .fontSize(16).fontWeight(FontWeight.Bold).fontColor('#FFFFFF')
+              .width(200).height(50).margin({ top: 24 })
+              .backgroundColor('#FF5252').borderRadius(25)
+              .onClick(() => {
+                this.viewModel.stopReminder()
+              })
+          }
+          .padding(32)
+          .backgroundColor('#FFFFFF')
+          .borderRadius(20)
+        }
+        .width('100%').height('100%')
+        .position({ x: 0, y: 0 })
+        .zIndex(1000)
+}
+      }
+    }
+  
   private getTagColor(tag: string): string {
     if (tag === this.selectedTag) return '#FFFFFF'
     if (this.isLocked()) return '#94A3B8'

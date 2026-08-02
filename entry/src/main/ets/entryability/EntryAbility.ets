@@ -4,6 +4,7 @@ import { window } from '@kit.ArkUI'
 import { common } from '@kit.AbilityKit'
 import { AnalyticsService } from '../analytics/AnalyticsService'
 import notificationManager from '@ohos.notificationManager'
+import reminderAgentManager from '@ohos.reminderAgentManager'
 
 const DOMAIN = 0x0000
 
@@ -18,7 +19,35 @@ export default class EntryAbility extends UIAbility {
     AnalyticsService.getInstance().init(this.context as common.UIAbilityContext)
     // 注册通知槽位（支持响铃）
     this.initNotificationSlot()
+    // 注册系统提醒槽位（手表等设备上也能震动+响铃1分钟）
+    this.initSystemReminderSlot()
     hilog.info(DOMAIN, 'testTag', '%{public}s', 'Ability onCreate')
+  }
+
+  private initSystemReminderSlot(): void {
+    try {
+      reminderAgentManager.publishReminder({
+        reminderType: reminderAgentManager.ReminderType.REMINDER_TYPE_TIMER,
+        triggerTimeInSeconds: 1,
+        ringDuration: 60,
+        title: '知时',
+        content: '专注已完成，需要停止提醒吗？',
+        expiredContent: '',
+        snoozeTimes: 0,
+        ringChannel: reminderAgentManager.RingChannel.RING_CHANNEL_ALARM,
+        actionButton: [
+          { title: '停止提醒', type: reminderAgentManager.ActionButtonType.ACTION_BUTTON_TYPE_CLOSE }
+        ]
+      } as reminderAgentManager.ReminderRequestTimer).then((id: number) => {
+        reminderAgentManager.cancelReminder(id).catch((e: Error) => {
+          hilog.error(DOMAIN, 'testTag', 'cleanup reminder failed: %{public}s', e.message)
+        })
+      }).catch((e: Error) => {
+        hilog.error(DOMAIN, 'testTag', 'reminder slot test failed: %{public}s', e.message)
+      })
+    } catch (err) {
+      hilog.error(DOMAIN, 'testTag', 'initSystemReminderSlot error: %{public}s', (err as Error).message)
+    }
   }
 
   private initNotificationSlot(): void {
