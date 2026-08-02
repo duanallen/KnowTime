@@ -18,6 +18,7 @@ export struct StatsPage {
   @State tagDistribution: Record<string, number> = {}
   @State hourlyDist: number[] = new Array<number>(24).fill(0)
   @State weekTotal: number = 0
+  @State monthTotal: number = 0
   private db: DatabaseHelper = DatabaseHelper.getInstance()
   private stats: FocusStatsService = FocusStatsService.getInstance()
   private hasInit: boolean = false
@@ -71,6 +72,7 @@ export struct StatsPage {
       this.dailyList = await this.stats.getDailyStats(30)
       this.tagDistribution = await this.stats.getTagStats(monthStart, todayEnd)
       this.hourlyDist = await this.stats.getHourlyDistribution(monthStart, todayEnd)
+      this.monthTotal = await this.db.getTotalMinutes(monthStart, todayEnd)
     }
   }
 
@@ -101,7 +103,8 @@ export struct StatsPage {
           Row({ space: 12 }) {
             Column() {
               Text(`${this.getLabel()}专注`).fontSize(12).fontColor('#94A3B8')
-              Text(this.selectedTab === '周' ? `${this.weekTotal}` : `${this.overview.averageDailyMinutes}`)
+              Text(this.selectedTab === '日' ? `${this.overview.averageDailyMinutes}` : 
+                  this.selectedTab === '周' ? `${this.weekTotal}` : `${this.monthTotal}`)
                 .fontSize(36).fontWeight(FontWeight.Bold).fontColor('#1A73E8')
               Text('分钟').fontSize(12).fontColor('#94A3B8')
             }.layoutWeight(1).padding(20).backgroundColor('#FFFFFF').borderRadius(16)
