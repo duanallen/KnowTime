@@ -17,8 +17,12 @@ export struct StatsPage {
   @State dailyList: DailyStats[] = []
   @State tagDistribution: Record<string, number> = {}
   @State hourlyDist: number[] = new Array<number>(24).fill(0)
+  @State dayTotal: number = 0
+  @State dayCount: number = 0
   @State weekTotal: number = 0
+  @State weekCount: number = 0
   @State monthTotal: number = 0
+  @State monthCount: number = 0
   private db: DatabaseHelper = DatabaseHelper.getInstance()
   private stats: FocusStatsService = FocusStatsService.getInstance()
   private hasInit: boolean = false
@@ -58,6 +62,8 @@ export struct StatsPage {
       this.dailyList = await this.stats.getDailyStats(1)
       this.tagDistribution = await this.stats.getTagStats(now.getTime(), todayEnd)
       this.hourlyDist = await this.stats.getHourlyDistribution(now.getTime(), todayEnd)
+      this.dayTotal = await this.db.getTotalMinutes(now.getTime(), todayEnd)
+      this.dayCount = await this.db.getSessionCount(now.getTime(), todayEnd)
     } else if (this.selectedTab === '周') {
       const monday = new Date(now)
       const dayOfWeek = now.getDay()
@@ -67,12 +73,14 @@ export struct StatsPage {
       this.tagDistribution = await this.stats.getTagStats(monday.getTime(), todayEnd)
       this.hourlyDist = await this.stats.getHourlyDistribution(monday.getTime(), todayEnd)
       this.weekTotal = await this.db.getTotalMinutes(monday.getTime(), todayEnd)
+      this.weekCount = await this.db.getSessionCount(monday.getTime(), todayEnd)
     } else {
       const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).getTime()
       this.dailyList = await this.stats.getDailyStats(30)
       this.tagDistribution = await this.stats.getTagStats(monthStart, todayEnd)
       this.hourlyDist = await this.stats.getHourlyDistribution(monthStart, todayEnd)
       this.monthTotal = await this.db.getTotalMinutes(monthStart, todayEnd)
+      this.monthCount = await this.db.getSessionCount(monthStart, todayEnd)
     }
   }
 
@@ -103,15 +111,16 @@ export struct StatsPage {
           Row({ space: 12 }) {
             Column() {
               Text(`${this.getLabel()}专注`).fontSize(12).fontColor('#94A3B8')
-              Text(this.selectedTab === '日' ? `${this.overview.averageDailyMinutes}` : 
+              Text(this.selectedTab === '日' ? `${this.dayTotal}` : 
                   this.selectedTab === '周' ? `${this.weekTotal}` : `${this.monthTotal}`)
                 .fontSize(36).fontWeight(FontWeight.Bold).fontColor('#1A73E8')
               Text('分钟').fontSize(12).fontColor('#94A3B8')
             }.layoutWeight(1).padding(20).backgroundColor('#FFFFFF').borderRadius(16)
 
             Column() {
-              Text('累计次数').fontSize(12).fontColor('#94A3B8')
-              Text(`${this.overview.totalSessionsAll}`)
+              Text(`${this.getLabel()}次数`).fontSize(12).fontColor('#94A3B8')
+              Text(this.selectedTab === '日' ? `${this.dayCount}` : 
+                  this.selectedTab === '周' ? `${this.weekCount}` : `${this.monthCount}`)
                 .fontSize(36).fontWeight(FontWeight.Bold).fontColor('#0D9488')
               Text('次').fontSize(12).fontColor('#94A3B8')
             }.layoutWeight(1).padding(20).backgroundColor('#FFFFFF').borderRadius(16)
