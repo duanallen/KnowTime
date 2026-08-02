@@ -119,7 +119,9 @@ export class DatabaseHelper {
       dist[tag] = (dist[tag] || 0) + list[i].actualDuration
     }
     // 统一转换为分钟，确保与getTotalMinutes逻辑一致
-    for (const tag in dist) {
+    const keys = Object.keys(dist)
+    for (let i = 0; i < keys.length; i++) {
+      const tag = keys[i]
       dist[tag] = Math.floor(dist[tag] / 60)
     }
     return dist
