@@ -3,7 +3,7 @@
  * 使用最简单的组件组合实现漏沙效果
  */
 @Component
-export struct Hourglass {
+export struct HourglassBasic {  // 修改为HourglassBasic
   @Prop elapsedSeconds: number = 0
   @Prop totalSeconds: number = 1500
   @Prop sandColor: string = '#F59E0B'
