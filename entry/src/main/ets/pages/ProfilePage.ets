@@ -16,7 +16,7 @@ export struct ProfilePage {
   @State totalMinutes: number = 0
   @State sessionCount: number = 0
   @State streakDays: number = 0
-  private achievements: Achievement[] = [
+  @State achievements: Achievement[] = [
     { icon: '🔥', title: '初识专注', desc: '完成第一次专注', unlocked: false },
     { icon: '⭐', title: '连续7天', desc: '连续7天专注', unlocked: false },
     { icon: '💎', title: '百时达人', desc: '累计100小时', unlocked: false },
@@ -52,9 +52,46 @@ export struct ProfilePage {
     this.totalMinutes = await this.db.getTotalMinutes(yearStart.getTime(), todayEnd)
     this.sessionCount = await this.db.getSessionCount(yearStart.getTime(), todayEnd)
     this.streakDays = await this.calcStreak()
-    this.achievements[0].unlocked = this.sessionCount >= 1
-    this.achievements[1].unlocked = this.streakDays >= 7
-    this.achievements[2].unlocked = this.totalMinutes >= 6000
+
+    // 查询年度所有会话，用于成就勋章判定
+    const allSessions = await this.db.querySessionsByRange(yearStart.getTime(), todayEnd)
+    let maxFlowScore = 0
+    let maxSingleDuration = 0
+    let readingTotalSeconds = 0
+    const earlyMorningDaySet: Set<string> = new Set()
+    for (let i = 0; i < allSessions.length; i++) {
+      const s = allSessions[i]
+      if (s.flowScore > maxFlowScore) maxFlowScore = s.flowScore
+      if (s.actualDuration > maxSingleDuration) maxSingleDuration = s.actualDuration
+      if (s.tag === '阅读') readingTotalSeconds += s.actualDuration
+      const startHour = new Date(s.startTime).getHours()
+      if (startHour < 6) {
+        const d = new Date(s.startTime)
+        d.setHours(0, 0, 0, 0)
+        earlyMorningDaySet.add(d.toDateString())
+      }
+    }
+    const earlyMorningDays = earlyMorningDaySet.size
+
+    // 本周专注总分钟数（周目标：本周专注 >= 5 小时 = 300 分钟）
+    const monday = new Date(now)
+    const dayOfWeek = now.getDay()
+    monday.setDate(now.getDate() - ((dayOfWeek + 6) % 7))
+    monday.setHours(0, 0, 0, 0)
+    const weekTotalMinutes = await this.db.getTotalMinutes(monday.getTime(), todayEnd)
+
+    // 判定全部 8 个成就勋章
+    const newAchievements: Achievement[] = [
+      { icon: '🔥', title: '初识专注', desc: '完成第一次专注', unlocked: this.sessionCount >= 1 },
+      { icon: '⭐', title: '连续7天', desc: '连续7天专注', unlocked: this.streakDays >= 7 },
+      { icon: '💎', title: '百时达人', desc: '累计100小时', unlocked: this.totalMinutes >= 6000 },
+      { icon: '🌟', title: '心流大师', desc: '心流得分>90', unlocked: maxFlowScore > 90 },
+      { icon: '🌅', title: '早起冠军', desc: '连续5天早6点', unlocked: earlyMorningDays >= 5 },
+      { icon: '🏆', title: '目标达成', desc: '完成周目标', unlocked: weekTotalMinutes >= 300 },
+      { icon: '🎯', title: '专注猎人', desc: '单次>120分钟', unlocked: maxSingleDuration > 120 * 60 },
+      { icon: '📚', title: '书虫', desc: '阅读累计10h', unlocked: readingTotalSeconds >= 10 * 60 * 60 },
+    ]
+    this.achievements = newAchievements
   }
 
   private async calcStreak(): Promise<number> {

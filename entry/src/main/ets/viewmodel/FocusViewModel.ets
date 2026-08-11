@@ -32,6 +32,8 @@ export class FocusViewModel {
   private reminderVibrationId: number = -1
   private reminderAudioStreamId: number = -1
   private reminderAgentId: number = -1
+  private runningStartMs: number = 0
+  private accumulatedSeconds: number = 0
   private db: DatabaseHelper = DatabaseHelper.getInstance()
   private analytics: AnalyticsService = AnalyticsService.getInstance()
   private appContext: Context | null = null
@@ -172,6 +174,7 @@ export class FocusViewModel {
     }
     this.currentSession = session
     this.elapsedSeconds = 0
+    this.accumulatedSeconds = 0
     this.focusState = FocusState.RUNNING
     this.startTimer()
     this.analytics.trackFocusStart(tag)
@@ -182,6 +185,7 @@ export class FocusViewModel {
     this.currentSession.state = FocusState.PAUSED
     this.focusState = FocusState.PAUSED
     this.interruptionStartTime = Date.now()
+    this.accumulatedSeconds = this.elapsedSeconds
     this.stopTimer()
     this.analytics.trackFocusPause(this.elapsedSeconds)
   }
@@ -200,6 +204,7 @@ export class FocusViewModel {
     }
     this.currentSession.state = FocusState.RUNNING
     this.focusState = FocusState.RUNNING
+    this.accumulatedSeconds = this.elapsedSeconds
     this.startTimer()
     this.analytics.trackFocusResume()
   }
@@ -247,18 +252,32 @@ export class FocusViewModel {
   }
 
   private startTimer(): void {
+    this.runningStartMs = Date.now()
     this.timerId = setInterval(() => {
       if (this.focusState === FocusState.RUNNING) {
-        this.elapsedSeconds++
-        if (this.currentSession) {
-          this.currentSession.actualDuration = this.elapsedSeconds
-          if (this.elapsedSeconds >= this.currentSession.plannedDuration) {
-            this.completeSession()
-            return
-          }
-        }
+        this.recalcElapsed()
       }
     }, 1000)
+  }
+
+  private recalcElapsed(): void {
+    if (this.focusState !== FocusState.RUNNING) return
+    const now = Date.now()
+    const newElapsed = this.accumulatedSeconds + Math.floor((now - this.runningStartMs) / 1000)
+    if (newElapsed !== this.elapsedSeconds) {
+      this.elapsedSeconds = newElapsed
+      if (this.currentSession) {
+        this.currentSession.actualDuration = this.elapsedSeconds
+        if (this.elapsedSeconds >= this.currentSession.plannedDuration) {
+          this.completeSession()
+          return
+        }
+      }
+    }
+  }
+
+  recalculateElapsed(): void {
+    this.recalcElapsed()
   }
 
   private async completeSession(): Promise<void> {

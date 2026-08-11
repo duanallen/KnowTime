@@ -84,6 +84,12 @@ export struct FocusPage {
     }
     this.viewModel.reset()
   }
+
+  onPageShow(): void {
+    // 页面恢复（如熄屏后亮屏返回）时，基于时间戳重新计算已用时长，
+    // 确保熄屏期间计时正常累计，不受页面 inactive 导致 setInterval 挂起的影响
+    this.viewModel.recalculateElapsed()
+  }
   
   private isLocked(): boolean {
     return this.viewModel.focusState !== FocusState.IDLE
