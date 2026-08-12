@@ -1,6 +1,7 @@
 import { AppColors } from '../common/Theme'
 import { DatabaseHelper } from '../database/DatabaseHelper'
 import { common } from '@kit.AbilityKit'
+import { router } from '@kit.ArkUI'
 
 interface Achievement {
   icon: string
@@ -172,6 +173,20 @@ export struct ProfilePage {
             .columnsTemplate('1fr 1fr 1fr 1fr').rowsGap(8).columnsGap(8).width('100%')
           }
           .width('100%').padding(20).backgroundColor('#F8FAFC').borderRadius(16)
+
+          Column() {
+            Row() {
+              Text('隐私政策').fontSize(15).fontColor('#1E293B').layoutWeight(1)
+              Text('>').fontSize(16).fontColor('#CBD5E1')
+            }
+            .width('100%').height(52).padding({ left: 16, right: 12 })
+            .onClick(() => {
+              const routeParams: Record<string, string> = {}
+              routeParams['displayMode'] = 'view'
+              router.pushUrl({ url: 'pages/PrivacyPolicyPage', params: routeParams })
+            })
+          }
+          .width('100%').backgroundColor('#FFFFFF').borderRadius(16)
 
           Blank().height(20)
         }

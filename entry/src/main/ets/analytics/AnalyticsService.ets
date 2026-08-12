@@ -18,6 +18,10 @@ export enum AnalyticsEvent {
   FOCUS_RESUME = 'focus_resume',
   PAGE_VIEW = 'page_view',
   SESSION_DURATION = 'session_duration',
+  PRIVACY_VIEW = 'privacy_view',
+  PRIVACY_AGREE = 'privacy_agree',
+  PRIVACY_DISAGREE = 'privacy_disagree',
+  PRIVACY_VERSION_UPDATE = 'privacy_version_update',
 }
 
 interface AnalyticsPayload {

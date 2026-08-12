@@ -4,6 +4,7 @@ import { common } from '@kit.AbilityKit'
 import { picker } from '@kit.CoreFileKit'
 import { preferences } from '@kit.ArkData'
 import { resourceManager } from '@kit.LocalizationKit'
+import { router } from '@kit.ArkUI'
 
 interface SettingRow {
   label: string
@@ -41,6 +42,7 @@ export struct SettingsPage {
   ]
   private group3: SettingRow[] = [
     { label: '关于知时', value: 'v1.0.0', isToggle: false },
+    { label: '隐私政策', value: '', isToggle: false },
     { label: '意见反馈', value: '', isToggle: false },
   ]
   private ringtoneOptions: RingtoneOption[] = [
@@ -230,6 +232,13 @@ export struct SettingsPage {
                   }
                 }
                 .width('100%').height(52).padding({ left: 16, right: 12 })
+                .onClick(() => {
+                  if (item.label === '隐私政策') {
+                    const routeParams: Record<string, string> = {}
+                    routeParams['displayMode'] = 'view'
+                    router.pushUrl({ url: 'pages/PrivacyPolicyPage', params: routeParams })
+                  }
+                })
                 .border({ width: { bottom: idx < this.group3.length - 1 ? 0.5 : 0 }, color: '#F1F5F9' })
               })
             }

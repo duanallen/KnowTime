@@ -147,6 +147,12 @@ export struct StatsPage {
                 Row({ space: 2 }) {
                   ForEach(this.dailyList, (item: DailyStats) => {
                     Column({ space: 2 }) {
+                      // 柱顶标注：专注时间（分钟），字体随数字长度自适应
+                      Text(item.totalMinutes > 0 ? this.formatMinutesShort(item.totalMinutes) : '')
+                        .fontSize(item.totalMinutes > 0
+                          ? this.getAdaptiveFontSize(this.formatMinutesShort(item.totalMinutes), 16, 10, 6)
+                          : 6)
+                        .fontColor('#475569').maxLines(1).fontWeight(FontWeight.Medium)
                       Column() {}
                         .width(14)
                         .height(Math.max(4, (item.totalMinutes / Math.max(this.getMaxDailyMinutes(), 1)) * 100))
@@ -158,9 +164,9 @@ export struct StatsPage {
                     .alignItems(HorizontalAlign.Center)
                   })
                 }
-                .height(120).alignItems(VerticalAlign.Bottom).padding({ left: 2, right: 2 })
+                .height(140).alignItems(VerticalAlign.Bottom).padding({ left: 2, right: 2 })
               }
-              .width('100%').height(130).scrollable(ScrollDirection.Horizontal).scrollBar(BarState.Off)
+              .width('100%').height(150).scrollable(ScrollDirection.Horizontal).scrollBar(BarState.Off)
             }
             .width('100%').padding(20).backgroundColor('#FFFFFF').borderRadius(16)
           }
@@ -172,6 +178,12 @@ export struct StatsPage {
                 Row({ space: 1 }) {
                   ForEach(this.hourlyDist, (val: number, idx: number) => {
                     Column({ space: 2 }) {
+                      // 柱顶标注：该时段专注时间（分钟），仅在有数据时显示，字体自适应
+                      Text(val > 0 ? this.formatMinutesShort(val) : '')
+                        .fontSize(val > 0
+                          ? this.getAdaptiveFontSize(this.formatMinutesShort(val), 12, 8, 5)
+                          : 5)
+                        .fontColor('#475569').maxLines(1).fontWeight(FontWeight.Medium)
                       Column() {}
                         .width(10)
                         .height(Math.max(2, (val / Math.max(...this.hourlyDist, 1)) * 60))
@@ -182,9 +194,9 @@ export struct StatsPage {
                     .alignItems(HorizontalAlign.Center)
                   })
                 }
-                .height(80).alignItems(VerticalAlign.Bottom).padding({ left: 2, right: 2 })
+                .height(100).alignItems(VerticalAlign.Bottom).padding({ left: 2, right: 2 })
               }
-              .width('100%').height(90).scrollable(ScrollDirection.Horizontal).scrollBar(BarState.Off)
+              .width('100%').height(110).scrollable(ScrollDirection.Horizontal).scrollBar(BarState.Off)
             }
             .width('100%').padding(20).backgroundColor('#FFFFFF').borderRadius(16)
           }
@@ -236,5 +248,40 @@ export struct StatsPage {
   private formatHours(min: number): string {
     if (min < 60) return `${min}分钟`
     return `${(min / 60).toFixed(1)}h`
+  }
+
+  /**
+   * 根据内容长度和容器宽度计算自适应字体大小
+   * 原则：保证文字在容器宽度内完整显示，同时不小于最小可读字号
+   * @param content 待显示内容（数字或字符串）
+   * @param containerWidth 容器宽度（vp）
+   * @param baseFontSize 基础字号（vp）
+   * @param minFontSize 最小字号（vp），默认 6
+   * @returns 计算后的字号
+   */
+  private getAdaptiveFontSize(content: number | string, containerWidth: number, baseFontSize: number,
+    minFontSize: number = 6): number {
+    const len: number = String(content).length
+    // 数字字符宽度约为字号的 0.55 倍，预留 0.5vp 间距
+    const charWidthRatio: number = 0.55
+    const requiredWidth: number = len * baseFontSize * charWidthRatio + 0.5
+    if (requiredWidth <= containerWidth) {
+      return baseFontSize
+    }
+    // 按比例缩小：fontSize = (containerWidth - 0.5) / (len * charWidthRatio)
+    const scaled: number = Math.floor((containerWidth - 0.5) / (len * charWidthRatio))
+    return Math.max(minFontSize, scaled)
+  }
+
+  /**
+   * 格式化专注分钟数为简短文本（用于柱状图标注）
+   * 超过 60 分钟时使用 "xh" 或 "x.xh" 形式，避免数字过长
+   */
+  private formatMinutesShort(min: number): string {
+    if (min <= 0) return ''
+    if (min < 60) return `${min}`
+    const h: number = min / 60
+    if (h < 10) return `${h.toFixed(1)}h`
+    return `${Math.floor(h)}h`
   }
 }

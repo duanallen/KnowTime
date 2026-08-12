@@ -2,7 +2,8 @@ import { AbilityConstant, ConfigurationConstant, UIAbility, Want } from '@kit.Ab
 import { hilog } from '@kit.PerformanceAnalysisKit'
 import { window } from '@kit.ArkUI'
 import { common } from '@kit.AbilityKit'
-import { AnalyticsService } from '../analytics/AnalyticsService'
+import { AnalyticsService, AnalyticsEvent } from '../analytics/AnalyticsService'
+import { PrivacyPreferenceService } from '../services/PrivacyPreferenceService'
 import notificationManager from '@ohos.notificationManager'
 import reminderAgentManager from '@ohos.reminderAgentManager'
 
@@ -72,15 +73,46 @@ export default class EntryAbility extends UIAbility {
     hilog.info(DOMAIN, 'testTag', '%{public}s', 'Ability onDestroy')
   }
 
-  onWindowStageCreate(windowStage: window.WindowStage): void {
+  async onWindowStageCreate(windowStage: window.WindowStage): Promise<void> {
     hilog.info(DOMAIN, 'testTag', '%{public}s', 'Ability onWindowStageCreate')
-    windowStage.loadContent('pages/Index', (err) => {
-      if (err.code) {
-        hilog.error(DOMAIN, 'testTag', 'Failed to load the content. Cause: %{public}s', JSON.stringify(err))
-        return
+
+    const context = this.context as common.UIAbilityContext
+    let needsConsent = true
+    let isVersionUpdate = false
+
+    try {
+      const state = await PrivacyPreferenceService.getInstance().getConsentState(context)
+      if (state.isAgreed) {
+        needsConsent = await PrivacyPreferenceService.getInstance().needsReconsent(context, '1.0')
+        if (needsConsent) {
+          isVersionUpdate = true
+        }
       }
-      hilog.info(DOMAIN, 'testTag', 'Succeeded in loading the content.')
-    })
+    } catch (e) {
+      hilog.error(DOMAIN, 'testTag', 'consent check failed: %{public}s', JSON.stringify(e))
+      needsConsent = true
+    }
+
+    if (needsConsent) {
+      if (isVersionUpdate) {
+        AnalyticsService.getInstance().track(AnalyticsEvent.PRIVACY_VERSION_UPDATE)
+      }
+      windowStage.loadContent('pages/PrivacyPolicyPage', (err) => {
+        if (err.code) {
+          hilog.error(DOMAIN, 'testTag', 'Failed to load privacy page. Cause: %{public}s', JSON.stringify(err))
+          return
+        }
+        hilog.info(DOMAIN, 'testTag', 'Succeeded in loading privacy page.')
+      })
+    } else {
+      windowStage.loadContent('pages/Index', (err) => {
+        if (err.code) {
+          hilog.error(DOMAIN, 'testTag', 'Failed to load the content. Cause: %{public}s', JSON.stringify(err))
+          return
+        }
+        hilog.info(DOMAIN, 'testTag', 'Succeeded in loading the content.')
+      })
+    }
   }
 
   onWindowStageDestroy(): void {

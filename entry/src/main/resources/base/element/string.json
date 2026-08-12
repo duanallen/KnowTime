@@ -15,6 +15,22 @@
     {
       "name": "form_desc",
       "value": "知时服务卡片"
+    },
+    {
+      "name": "privacy_policy_version",
+      "value": "1.0"
+    },
+    {
+      "name": "privacy_policy_update_date",
+      "value": "2026-08-13"
+    },
+    {
+      "name": "privacy_policy_applicable_version",
+      "value": "v1.0.0 起"
+    },
+    {
+      "name": "privacy_policy_load_failed",
+      "value": "隐私政策内容加载失败，请稍后重试或联系开发者"
     }
   ]
 }

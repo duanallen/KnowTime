@@ -3,6 +3,46 @@
     {
       "name": "start_window_background",
       "value": "#1A73E8"
+    },
+    {
+      "name": "privacy_page_bg",
+      "value": "#F8FAFC"
+    },
+    {
+      "name": "privacy_card_bg",
+      "value": "#FFFFFF"
+    },
+    {
+      "name": "privacy_text_primary",
+      "value": "#1E293B"
+    },
+    {
+      "name": "privacy_text_secondary",
+      "value": "#64748B"
+    },
+    {
+      "name": "privacy_text_hint",
+      "value": "#94A3B8"
+    },
+    {
+      "name": "privacy_border",
+      "value": "#F1F5F9"
+    },
+    {
+      "name": "privacy_button_primary",
+      "value": "#3B82F6"
+    },
+    {
+      "name": "privacy_button_secondary",
+      "value": "#F1F5F9"
+    },
+    {
+      "name": "privacy_button_text_primary",
+      "value": "#FFFFFF"
+    },
+    {
+      "name": "privacy_button_text_secondary",
+      "value": "#1E293B"
     }
   ]
 }
