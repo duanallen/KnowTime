@@ -1,0 +1,32 @@
+{
+  "issue_number": "2",
+  "localization_status": "plausible",
+  "root_cause_summary": "ProfilePage.ets 中 achievements 数组定义了 8 个成就勋章但 loadData() 仅对前 3 个（index 0/1/2）设置了 unlocked 判定逻辑，剩余 5 个勋章（心流大师、早起冠军、目标达成、专注猎人、书虫）始终为 false 无任何判定；且 achievements 为 private 普通字段而非 @State 装饰，修改 unlocked 不会触发 ArkUI 响应式 UI 刷新。",
+  "faulty_logic": "成就勋章判定逻辑不完整（8 个勋章仅 3 个有判定）且 achievements 未使用 @State 装饰导致 UI 不响应状态变化",
+  "impact_scope": {
+    "files": [
+      "entry/src/main/ets/pages/ProfilePage.ets"
+    ],
+    "methods": [
+      "ProfilePage.loadData()",
+      "ProfilePage.aboutToAppear()"
+    ],
+    "execution_path": "用户进入我的页面 -> aboutToAppear -> loadData -> 仅设置 achievements[0..2].unlocked -> achievements[3..7] 始终 false -> 勋章不点亮 -> 且 achievements 非 @State 导致 UI 不刷新"
+  },
+  "top_files": [
+    "entry/src/main/ets/pages/ProfilePage.ets"
+  ],
+  "top_ranges": [
+    {
+      "file": "entry/src/main/ets/pages/ProfilePage.ets",
+      "range": "19-28",
+      "description": "achievements 为 private 非 @State"
+    },
+    {
+      "file": "entry/src/main/ets/pages/ProfilePage.ets",
+      "range": "45-58",
+      "description": "loadData() 仅判定 3/8 勋章"
+    }
+  ],
+  "evidence_basis": "静态代码分析：ProfilePage.ets 第19行 achievements 为 private 非 @State；第55-57行仅设置 achievements[0..2].unlocked；grep 确认无 achievements[3..7] 的 unlocked 赋值"
+}

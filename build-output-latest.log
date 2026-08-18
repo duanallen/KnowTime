@@ -1,0 +1,351 @@
+﻿> hvigor [32mUP-TO-DATE :entry:default@PreBuild...  [39m
+> hvigor [32mFinished :entry:default@CreateModuleInfo... after 1 ms [39m
+> hvigor [32mUP-TO-DATE :entry:default@GenerateMetadata...  [39m
+> hvigor [32mFinished :entry:default@ConfigureCmake... after 1 ms [39m
+> hvigor [32mUP-TO-DATE :entry:default@MergeProfile...  [39m
+> hvigor [32mUP-TO-DATE :entry:default@CreateBuildProfile...  [39m
+> hvigor [32mFinished :entry:default@PreCheckSyscap... after 1 ms [39m
+> hvigor [32mUP-TO-DATE :entry:default@GeneratePkgContextInfo...  [39m
+> hvigor [32mFinished :entry:default@GeneratePkgSdkInfo... after 5 ms [39m
+> hvigor [32mFinished :entry:default@ProcessIntegratedHsp... after 1 ms [39m
+> hvigor [32mFinished :entry:default@BuildNativeWithCmake... after 1 ms [39m
+> hvigor [32mUP-TO-DATE :entry:default@MakePackInfo...  [39m
+> hvigor [32mFinished :entry:default@SyscapTransform... after 18 ms [39m
+> hvigor [32mUP-TO-DATE :entry:default@ProcessProfile...  [39m
+> hvigor [32mUP-TO-DATE :entry:default@ProcessRouterMap...  [39m
+> hvigor [32mUP-TO-DATE :entry:default@ProcessShareConfig...  [39m
+> hvigor [32mFinished :entry:default@ProcessStartupConfig... after 3 ms [39m
+> hvigor [32mFinished :entry:default@BuildNativeWithNinja... after 1 ms [39m
+> hvigor [32mUP-TO-DATE :entry:default@ProcessResource...  [39m
+> hvigor [32mUP-TO-DATE :entry:default@GenerateLoaderJson...  [39m
+> hvigor [32mUP-TO-DATE :entry:default@ProcessLibs...  [39m
+> hvigor [32mUP-TO-DATE :entry:default@CompileResource...  [39m
+> hvigor [32mUP-TO-DATE :entry:default@DoNativeStrip...  [39m
+> hvigor [32mFinished :entry:default@BuildJS... after 7 ms [39m
+> hvigor [32mUP-TO-DATE :entry:default@CacheNativeLibs...  [39m
+node.exe : > hvigor [33mWARN: [33mWARN: [33m[33mArkTS:WARN File: D:/work/code/AICode/HarmonyOS/KnowTime/entry/src/m
+ain/ets/analytics/AnalyticsService.ets:165:42
+所在位置 D:\work\code\AICode\HarmonyOS\KnowTime\run_build.ps1:4 字符: 11
++ $output = & 'D:\software\toolInstall\DevEcoStudio6.1.1Release\DevEco  ...
++           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (> hvigor [33mW...vice.ets:165:42:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+ To use this API, you need to apply for the permissions: ohos.permission.INTERNET
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: D:/work/code/AICode/HarmonyOS/KnowTime/entry/src/main/ets/services/ScreenStateSer
+vice.ets:38:39
+ 'isScreenLocked' has been deprecated.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: D:/work/code/AICode/HarmonyOS/KnowTime/entry/src/main/ets/formability/KnowTimeFor
+mAbility.ets:31:5
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: D:/work/code/AICode/HarmonyOS/KnowTime/entry/src/main/ets/database/DatabaseHelper
+.ets:44:24
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: D:/work/code/AICode/HarmonyOS/KnowTime/entry/src/main/ets/database/DatabaseHelper
+.ets:59:11
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: D:/work/code/AICode/HarmonyOS/KnowTime/entry/src/main/ets/database/DatabaseHelper
+.ets:60:11
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: D:/work/code/AICode/HarmonyOS/KnowTime/entry/src/main/ets/database/DatabaseHelper
+.ets:72:11
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: D:/work/code/AICode/HarmonyOS/KnowTime/entry/src/main/ets/database/DatabaseHelper
+.ets:75:13
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: D:/work/code/AICode/HarmonyOS/KnowTime/entry/src/main/ets/database/DatabaseHelper
+.ets:140:29
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: D:/work/code/AICode/HarmonyOS/KnowTime/entry/src/main/ets/database/DatabaseHelper
+.ets:142:12
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: D:/work/code/AICode/HarmonyOS/KnowTime/entry/src/main/ets/database/DatabaseHelper
+.ets:144:13
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: D:/work/code/AICode/HarmonyOS/KnowTime/entry/src/main/ets/database/DatabaseHelper
+.ets:144:33
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: D:/work/code/AICode/HarmonyOS/KnowTime/entry/src/main/ets/database/DatabaseHelper
+.ets:145:19
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: D:/work/code/AICode/HarmonyOS/KnowTime/entry/src/main/ets/database/DatabaseHelper
+.ets:145:39
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: D:/work/code/AICode/HarmonyOS/KnowTime/entry/src/main/ets/database/DatabaseHelper
+.ets:146:14
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: D:/work/code/AICode/HarmonyOS/KnowTime/entry/src/main/ets/database/DatabaseHelper
+.ets:146:34
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: D:/work/code/AICode/HarmonyOS/KnowTime/entry/src/main/ets/database/DatabaseHelper
+.ets:147:20
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: D:/work/code/AICode/HarmonyOS/KnowTime/entry/src/main/ets/database/DatabaseHelper
+.ets:147:38
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: D:/work/code/AICode/HarmonyOS/KnowTime/entry/src/main/ets/database/DatabaseHelper
+.ets:148:18
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: D:/work/code/AICode/HarmonyOS/KnowTime/entry/src/main/ets/database/DatabaseHelper
+.ets:148:36
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: D:/work/code/AICode/HarmonyOS/KnowTime/entry/src/main/ets/database/DatabaseHelper
+.ets:149:26
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: D:/work/code/AICode/HarmonyOS/KnowTime/entry/src/main/ets/database/DatabaseHelper
+.ets:149:44
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: D:/work/code/AICode/HarmonyOS/KnowTime/entry/src/main/ets/database/DatabaseHelper
+.ets:150:25
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: D:/work/code/AICode/HarmonyOS/KnowTime/entry/src/main/ets/database/DatabaseHelper
+.ets:150:43
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: D:/work/code/AICode/HarmonyOS/KnowTime/entry/src/main/ets/database/DatabaseHelper
+.ets:151:16
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: D:/work/code/AICode/HarmonyOS/KnowTime/entry/src/main/ets/database/DatabaseHelper
+.ets:151:36
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: D:/work/code/AICode/HarmonyOS/KnowTime/entry/src/main/ets/database/DatabaseHelper
+.ets:152:22
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: D:/work/code/AICode/HarmonyOS/KnowTime/entry/src/main/ets/database/DatabaseHelper
+.ets:152:42
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: D:/work/code/AICode/HarmonyOS/KnowTime/entry/src/main/ets/database/DatabaseHelper
+.ets:153:20
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: D:/work/code/AICode/HarmonyOS/KnowTime/entry/src/main/ets/database/DatabaseHelper
+.ets:153:38
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: D:/work/code/AICode/HarmonyOS/KnowTime/entry/src/main/ets/database/DatabaseHelper
+.ets:154:16
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: D:/work/code/AICode/HarmonyOS/KnowTime/entry/src/main/ets/database/DatabaseHelper
+.ets:154:36
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: D:/work/code/AICode/HarmonyOS/KnowTime/entry/src/main/ets/database/DatabaseHelper
+.ets:158:5
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: D:/work/code/AICode/HarmonyOS/KnowTime/entry/src/main/ets/database/DatabaseHelper
+.ets:170:7
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: D:/work/code/AICode/HarmonyOS/KnowTime/entry/src/main/ets/pages/FocusPage.ets:45:
+17
+ 'getContext' has been deprecated.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: D:/work/code/AICode/HarmonyOS/KnowTime/entry/src/main/ets/pages/StatsPage.ets:31:
+17
+ 'getContext' has been deprecated.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: D:/work/code/AICode/HarmonyOS/KnowTime/entry/src/main/ets/pages/SettingsPage.ets:
+59:42
+ 'getContext' has been deprecated.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: D:/work/code/AICode/HarmonyOS/KnowTime/entry/src/main/ets/pages/SettingsPage.ets:
+114:42
+ 'getContext' has been deprecated.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: D:/work/code/AICode/HarmonyOS/KnowTime/entry/src/main/ets/pages/SettingsPage.ets:
+121:5
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: D:/work/code/AICode/HarmonyOS/KnowTime/entry/src/main/ets/pages/SettingsPage.ets:
+135:44
+ 'getContext' has been deprecated.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: D:/work/code/AICode/HarmonyOS/KnowTime/entry/src/main/ets/pages/SettingsPage.ets:
+253:28
+ 'pushUrl' has been deprecated.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: D:/work/code/AICode/HarmonyOS/KnowTime/entry/src/main/ets/pages/SettingsPage.ets:
+254:36
+ 'showToast' has been deprecated.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: D:/work/code/AICode/HarmonyOS/KnowTime/entry/src/main/ets/pages/SettingsPage.ets:
+259:28
+ 'pushUrl' has been deprecated.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: D:/work/code/AICode/HarmonyOS/KnowTime/entry/src/main/ets/pages/SettingsPage.ets:
+261:34
+ 'showToast' has been deprecated.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: D:/work/code/AICode/HarmonyOS/KnowTime/entry/src/main/ets/pages/ProfilePage.ets:3
+4:17
+ 'getContext' has been deprecated.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: D:/work/code/AICode/HarmonyOS/KnowTime/entry/src/main/ets/pages/ProfilePage.ets:1
+86:22
+ 'pushUrl' has been deprecated.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: D:/work/code/AICode/HarmonyOS/KnowTime/entry/src/main/ets/pages/PrivacyPolicyPage
+.ets:23:27
+ 'getParams' has been deprecated.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: D:/work/code/AICode/HarmonyOS/KnowTime/entry/src/main/ets/pages/PrivacyPolicyPage
+.ets:28:21
+ 'getContext' has been deprecated.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: D:/work/code/AICode/HarmonyOS/KnowTime/entry/src/main/ets/pages/PrivacyPolicyPage
+.ets:82:20
+ 'back' has been deprecated.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: D:/work/code/AICode/HarmonyOS/KnowTime/entry/src/main/ets/pages/PrivacyPolicyPage
+.ets:177:21
+ 'getContext' has been deprecated.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: D:/work/code/AICode/HarmonyOS/KnowTime/entry/src/main/ets/pages/PrivacyPolicyPage
+.ets:185:7
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: D:/work/code/AICode/HarmonyOS/KnowTime/entry/src/main/ets/pages/PrivacyPolicyPage
+.ets:185:14
+ 'replaceUrl' has been deprecated.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: D:/work/code/AICode/HarmonyOS/KnowTime/entry/src/main/ets/pages/PrivacyPolicyPage
+.ets:187:7
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: D:/work/code/AICode/HarmonyOS/KnowTime/entry/src/main/ets/pages/PrivacyPolicyPage
+.ets:187:20
+ 'showToast' has been deprecated.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: D:/work/code/AICode/HarmonyOS/KnowTime/entry/src/main/ets/pages/PrivacyPolicyPage
+.ets:193:21
+ 'getContext' has been deprecated.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: D:/work/code/AICode/HarmonyOS/KnowTime/entry/src/main/ets/pages/PrivacyPolicyPage
+.ets:197:5
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: D:/work/code/AICode/HarmonyOS/KnowTime/entry/src/main/ets/pages/PrivacyPolicyPage
+.ets:197:18
+ 'showDialog' has been deprecated.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: D:/work/code/AICode/HarmonyOS/KnowTime/entry/src/main/ets/pages/PrivacyPolicyPage
+.ets:206:21
+ 'getContext' has been deprecated.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: D:/work/code/AICode/HarmonyOS/KnowTime/entry/src/main/ets/pages/AboutPage.ets:25:
+21
+ 'getContext' has been deprecated.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: D:/work/code/AICode/HarmonyOS/KnowTime/entry/src/main/ets/pages/AboutPage.ets:70:
+12
+ 'back' has been deprecated.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: D:/work/code/AICode/HarmonyOS/KnowTime/entry/src/main/ets/pages/AboutPage.ets:78:
+20
+ 'pushUrl' has been deprecated.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: D:/work/code/AICode/HarmonyOS/KnowTime/entry/src/main/ets/pages/AboutPage.ets:81:
+23
+ 'getContext' has been deprecated.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: D:/work/code/AICode/HarmonyOS/KnowTime/entry/src/main/ets/pages/AboutPage.ets:83:
+7
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: D:/work/code/AICode/HarmonyOS/KnowTime/entry/src/main/ets/pages/AboutPage.ets:83:
+20
+ 'showToast' has been deprecated.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: D:/work/code/AICode/HarmonyOS/KnowTime/entry/src/main/ets/pages/AboutPage.ets:89:
+21
+ 'getContext' has been deprecated.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: D:/work/code/AICode/HarmonyOS/KnowTime/entry/src/main/ets/pages/AboutPage.ets:91:
+5
+ Function may throw exceptions. Special handling is required.
+[39m[39m
+[33mWARN: [33m[33mArkTS:WARN File: D:/work/code/AICode/HarmonyOS/KnowTime/entry/src/main/ets/pages/AboutPage.ets:91:
+18
+ 'showToast' has been deprecated.
+[39m[39m
+[33mWARN: [33mArkTS:WARN File: D:/work/code/AICode/HarmonyOS/KnowTime/entry/src/main/ets/widget/pages/WidgetCard2x4.e
+ts:4:1
+ '@Entry' should have a parameter, like '@Entry (storage)'.[39m[39m
+[33mWARN: [33mArkTS:WARN File: D:/work/code/AICode/HarmonyOS/KnowTime/entry/src/main/ets/widget/pages/WidgetCard4x4.e
+ts:4:1
+ '@Entry' should have a parameter, like '@Entry (storage)'.[39m[39m
+[33mWARN: [33mArkTS:WARN File: D:/work/code/AICode/HarmonyOS/KnowTime/entry/src/main/ets/widget/pages/WidgetCard2x2.e
+ts:4:1
+ '@Entry' should have a parameter, like '@Entry (storage)'.[39m[39m
+[33mWARN: [33mArkTS:WARN File: D:/work/code/AICode/HarmonyOS/KnowTime/entry/src/main/ets/pages/FocusPage.ets:13:1
+ It's not a recommended way to export struct with '@Entry' decorator, which may cause ACE Engine error in component pre
+view mode.[39m[39m
+[33mWARN: [33mArkTS:WARN File: D:/work/code/AICode/HarmonyOS/KnowTime/entry/src/main/ets/pages/FocusPage.ets:35:29
+ The '@Entry' component 'FocusPage' cannot have the '@Prop' property 'refreshKey'.[39m[39m
+[33mWARN: [33mArkTS:WARN File: D:/work/code/AICode/HarmonyOS/KnowTime/entry/src/main/ets/pages/StatsPage.ets:6:1
+ It's not a recommended way to export struct with '@Entry' decorator, which may cause ACE Engine error in component pre
+view mode.[39m[39m
+[33mWARN: [33mArkTS:WARN File: D:/work/code/AICode/HarmonyOS/KnowTime/entry/src/main/ets/pages/StatsPage.ets:9:29
+ The '@Entry' component 'StatsPage' cannot have the '@Prop' property 'refreshKey'.[39m[39m
+[33mWARN: [33mArkTS:WARN File: D:/work/code/AICode/HarmonyOS/KnowTime/entry/src/main/ets/pages/SettingsPage.ets:22:1
+ It's not a recommended way to export struct with '@Entry' decorator, which may cause ACE Engine error in component pre
+view mode.[39m[39m
+[33mWARN: [33mArkTS:WARN File: D:/work/code/AICode/HarmonyOS/KnowTime/entry/src/main/ets/pages/SettingsPage.ets:25:29
+ The '@Entry' component 'SettingsPage' cannot have the '@Prop' property 'refreshKey'.[39m[39m
+[33mWARN: [33mArkTS:WARN File: D:/work/code/AICode/HarmonyOS/KnowTime/entry/src/main/ets/pages/ProfilePage.ets:13:1
+ It's not a recommended way to export struct with '@Entry' decorator, which may cause ACE Engine error in component pre
+view mode.[39m[39m
+[33mWARN: [33mArkTS:WARN File: D:/work/code/AICode/HarmonyOS/KnowTime/entry/src/main/ets/pages/ProfilePage.ets:16:29
+ The '@Entry' component 'ProfilePage' cannot have the '@Prop' property 'refreshKey'.[39m[39m
+[39m
+> hvigor [32mFinished :entry:default@CompileArkTS... after 10 s 243 ms [39m
+> hvigor [32mFinished :entry:default@GeneratePkgModuleJson... after 12 ms [39m
+> hvigor [32mFinished :entry:default@ProcessCompiledResources... after 1 ms [39m
+> hvigor [32mFinished :entry:default@PackageHap... after 1 s 276 ms [39m
+> hvigor [32mFinished :entry:default@PackingCheck... after 11 ms [39m
+> hvigor [91mERROR: Failed :entry:default@SignHap... [39m
+> hvigor [91mERROR: Tools execution failed.
+08-15 06:19:27.596  ERROR - 
+ERROR: 11014003 Init keystore failed
+Error Message: parseAlgParameters failed: ObjectIdentifier() -- data isn't an object ID (tag = 48)
+
+* Try the following: 
+ > The key store file does not exist, please check the key store file path.
+ > Incorrect keystore password, please input the correct plaintext password.
+ > The keystore was created by a newer JDK version, please use the same JDK version
+	 Detail: Please check the message from tools.
+
+[31m* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --debug option to get more log output.
+[39m
+> hvigor [91mERROR: BUILD FAILED in 22 s 653 ms [39m

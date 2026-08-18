@@ -43,6 +43,38 @@
     {
       "name": "privacy_button_text_secondary",
       "value": "#F1F5F9"
+    },
+    {
+      "name": "about_page_bg",
+      "value": "#0F172A"
+    },
+    {
+      "name": "about_card_bg",
+      "value": "#1E293B"
+    },
+    {
+      "name": "about_text_primary",
+      "value": "#F1F5F9"
+    },
+    {
+      "name": "about_text_secondary",
+      "value": "#94A3B8"
+    },
+    {
+      "name": "about_text_hint",
+      "value": "#64748B"
+    },
+    {
+      "name": "about_vendor_highlight",
+      "value": "#F1F5F9"
+    },
+    {
+      "name": "about_border",
+      "value": "#334155"
+    },
+    {
+      "name": "about_button_primary",
+      "value": "#60A5FA"
     }
   ]
 }

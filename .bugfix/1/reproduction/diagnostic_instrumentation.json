@@ -1,0 +1,15 @@
+{
+  "issue_number": "1",
+  "instrumented_locations": [
+    {
+      "location_type": "project_source",
+      "file_path": "D:\\work\\code\\AICode\\HarmonyOS\\KnowTime\\entry\\src\\main\\ets\\viewmodel\\FocusViewModel.ets",
+      "target_region": "startTimer() method, lines 249-262",
+      "debug_question": "计时器是否使用 setInterval 纯计数器递增 elapsedSeconds，而非基于 Date.now() 时间戳计算已用时长？熄屏时 setInterval 是否被挂起导致计时停止？",
+      "trace_kind": "state_and_control_flow",
+      "observed_values": "setInterval(() => { this.elapsedSeconds++ ... }, 1000) — 纯计数器递增，无时间戳补偿；无 onPageShow 恢复机制",
+      "trace_output_observed": false,
+      "missing_trace_output_reason": "HarmonyOS SDK (hvigorw) 不在 PATH 中，无法执行测试收集运行时 trace 输出；基于静态代码分析确认缺陷机制"
+    }
+  ]
+}

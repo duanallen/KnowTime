@@ -1,0 +1,10 @@
+{
+  "strategy": "scoped_structural_search",
+  "scope": "entry/src/main/ets",
+  "findings": [
+    "FocusPage.ets 无 onPageShow/onPageHide 生命周期回调（仅 Index.ets 有 onPageShow）",
+    "FocusViewModel.ets startTimer() 使用 setInterval(() => { this.elapsedSeconds++ ... }, 1000) 纯计数器递增",
+    "FocusViewModel.ets 无计时起始时间戳字段用于补偿熄屏期间的时间",
+    "FocusViewModel.ets 使用 Date.now() 用于会话开始/暂停/提醒，但未用于计时 tick 的已用时长计算"
+  ]
+}

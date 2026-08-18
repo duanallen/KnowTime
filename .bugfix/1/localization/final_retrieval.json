@@ -1,0 +1,33 @@
+{
+  "strategy": "scoped_structural_search",
+  "results": [
+    {
+      "file": "entry/src/main/ets/viewmodel/FocusViewModel.ets",
+      "ranges": ["249-262"],
+      "finding": "startTimer() 使用 setInterval 纯计数器递增 elapsedSeconds，无时间戳补偿"
+    },
+    {
+      "file": "entry/src/main/ets/pages/FocusPage.ets",
+      "ranges": ["44-86"],
+      "finding": "无 onPageShow 生命周期回调，熄屏恢复后不重新计算已用时长"
+    }
+  ],
+  "final_top_localization": {
+    "top_files": [
+      "entry/src/main/ets/viewmodel/FocusViewModel.ets",
+      "entry/src/main/ets/pages/FocusPage.ets"
+    ],
+    "top_ranges": [
+      {
+        "file": "entry/src/main/ets/viewmodel/FocusViewModel.ets",
+        "range": "249-262",
+        "description": "startTimer() 方法：setInterval(() => { this.elapsedSeconds++ ... }, 1000) 纯计数器递增，熄屏时 setInterval 被系统挂起导致计时停止"
+      },
+      {
+        "file": "entry/src/main/ets/pages/FocusPage.ets",
+        "range": "44-86",
+        "description": "aboutToAppear/aboutToDisappear 无 onPageShow 回调，页面从熄屏恢复时不重新计算 elapsedSeconds"
+      }
+    ]
+  }
+}

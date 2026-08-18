@@ -1,0 +1,27 @@
+{
+  "strategy": "scoped_structural_search",
+  "results": [
+    {
+      "file": "entry/src/main/ets/pages/ProfilePage.ets",
+      "ranges": ["19-28", "45-58"],
+      "finding": "achievements 为 private 非 @State；loadData 仅判定 3/8 勋章"
+    }
+  ],
+  "final_top_localization": {
+    "top_files": [
+      "entry/src/main/ets/pages/ProfilePage.ets"
+    ],
+    "top_ranges": [
+      {
+        "file": "entry/src/main/ets/pages/ProfilePage.ets",
+        "range": "19-28",
+        "description": "achievements 为 private 普通字段非 @State，修改 unlocked 不触发 ArkUI 响应式刷新"
+      },
+      {
+        "file": "entry/src/main/ets/pages/ProfilePage.ets",
+        "range": "45-58",
+        "description": "loadData() 仅设置 achievements[0..2].unlocked 判定逻辑，achievements[3..7]（心流大师/早起冠军/目标达成/专注猎人/书虫）始终为 false 无判定"
+      }
+    ]
+  }
+}

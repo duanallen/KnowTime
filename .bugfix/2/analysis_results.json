@@ -1,0 +1,34 @@
+{
+  "preconditions": {
+    "inputs": {
+      "dataset_or_case": "进入\"我的\"页面（ProfilePage）查看成就勋章区域",
+      "size_or_boundary": "",
+      "other": "应用已产生一定的专注统计数据（专注时长、专注次数等）"
+    },
+    "environments": {
+      "version": "HarmonyOS SDK 6.0.1(21)，目标设备 phone/tablet",
+      "other": "成就勋章功能应依据需求文档实现"
+    }
+  },
+  "expected_behavior": {
+    "description": "\"我的\"页面的成就勋章应根据需求文档实现完整功能：依据用户的专注统计数据（如累计专注时长、专注次数、连续打卡天数等）判定并点亮对应等级/类型的勋章，展示已达成与未达成状态，体现用户成就进度。"
+  },
+  "actual_behavior": {
+    "description": "\"我的\"页面的成就勋章没有实现功能，勋章仅为静态展示，未根据用户专注数据判定达成状态、未点亮已达成勋章、未展示成就进度，功能缺失。"
+  },
+  "possible_root_cause": "",
+  "reproduction_seed_snippet": "",
+  "minimal_reproduction_steps": "1. 打开知时应用，进行若干次专注计时以产生统计数据；2. 切换到\"我的\"页面（ProfilePage）；3. 查看成就勋章区域；4. 观察到勋章未根据专注数据展示达成状态，无任何功能交互与判定逻辑（期望：勋章应根据需求文档依据专注数据点亮/展示进度）。",
+  "log_excerpt": "",
+  "log_evidence": {
+    "log_path": "",
+    "start_line": "",
+    "end_line": "",
+    "summary": "",
+    "content": ""
+  },
+  "workflow_readiness": {
+    "decision": "PASS",
+    "missing_or_insufficient_information": ""
+  }
+}

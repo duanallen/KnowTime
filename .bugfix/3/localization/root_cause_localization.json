@@ -1,0 +1,26 @@
+{
+  "issue_number": "3",
+  "localization_status": "plausible",
+  "root_cause_summary": "FocusViewModel.stopSession() 在用户从 PAUSED 状态结束会话时，未将正在进行的暂停记录为 InterruptionRecord。中断仅在 resumeSession() 中记录（暂停→恢复时 push 到 interruptions），而暂停→结束路径跳过了 resumeSession()，导致 interruptions 数组为空，calculateFlowScore() 不扣减中断分数。",
+  "faulty_logic": "stopSession() 未在 PAUSED 状态下补录当前暂停为中断",
+  "impact_scope": {
+    "files": [
+      "entry/src/main/ets/viewmodel/FocusViewModel.ets"
+    ],
+    "methods": [
+      "FocusViewModel.stopSession()"
+    ],
+    "execution_path": "用户开始计时 -> 暂停(pauseSession记录interruptionStartTime) -> 结束(stopSession直接计算flowScore) -> interruptions为空 -> 不扣分"
+  },
+  "top_files": [
+    "entry/src/main/ets/viewmodel/FocusViewModel.ets"
+  ],
+  "top_ranges": [
+    {
+      "file": "entry/src/main/ets/viewmodel/FocusViewModel.ets",
+      "range": "212-251",
+      "description": "stopSession() 未在 PAUSED 状态下补录暂停为中断"
+    }
+  ],
+  "evidence_basis": "静态代码分析：stopSession() 第212-251行无 PAUSED 状态检查和中断补录；resumeSession() 第193-210行是唯一记录中断的位置"
+}

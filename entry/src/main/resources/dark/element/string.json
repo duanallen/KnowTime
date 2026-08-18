@@ -15,6 +15,58 @@
     {
       "name": "privacy_policy_load_failed",
       "value": "隐私政策内容加载失败，请稍后重试或联系开发者"
+    },
+    {
+      "name": "about_page_title",
+      "value": "关于知时"
+    },
+    {
+      "name": "about_app_slogan",
+      "value": "时间感知型深度专注助手"
+    },
+    {
+      "name": "about_vendor_statement_template",
+      "value": "应用由 %s 开发"
+    },
+    {
+      "name": "about_market_status",
+      "value": "本应用尚未上架应用市场"
+    },
+    {
+      "name": "about_contact_email",
+      "value": "support@knowtime.com"
+    },
+    {
+      "name": "about_entry_privacy",
+      "value": "隐私政策"
+    },
+    {
+      "name": "about_entry_feedback",
+      "value": "意见反馈"
+    },
+    {
+      "name": "about_version_prefix",
+      "value": "版本 "
+    },
+    {
+      "name": "about_version_unknown",
+      "value": "版本未知"
+    },
+    {
+      "name": "about_app_name_fallback",
+      "value": "知时"
+    },
+    {
+      "name": "about_vendor_fallback",
+      "value": "段力"
+    },
+    {
+      "name": "about_open_failed",
+      "value": "页面打开失败，请稍后重试"
+    },
+    {
+      "name": "about_feedback_unavailable",
+      "value": "功能暂不可用，请稍后重试"
     }
   ]
 }

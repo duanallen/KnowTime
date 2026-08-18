@@ -1,0 +1,4 @@
+{
+  "initial_retrieval_strategy": "scoped_structural_search",
+  "reason": "复现阶段已通过静态代码分析定位到具体缺陷文件和方法（FocusViewModel.startTimer 使用 setInterval 纯计数器递增），具备明确的结构化线索，无需语义检索"
+}

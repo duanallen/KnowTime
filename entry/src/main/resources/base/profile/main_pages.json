@@ -1,6 +1,7 @@
 {
   "src": [
     "pages/Index",
-    "pages/PrivacyPolicyPage"
+    "pages/PrivacyPolicyPage",
+    "pages/AboutPage"
   ]
 }

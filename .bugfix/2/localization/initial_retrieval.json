@@ -1,0 +1,10 @@
+{
+  "strategy": "scoped_structural_search",
+  "scope": "entry/src/main/ets",
+  "findings": [
+    "ProfilePage.ets achievements 为 private 普通字段（第19行），非 @State 装饰",
+    "ProfilePage.ets loadData() 仅设置 achievements[0..2].unlocked（第55-57行）",
+    "ProfilePage.ets achievements[3..7] 无判定逻辑，unlocked 始终为 false",
+    "ProfilePage.ets ForEach 遍历 achievements 渲染勋章（第123行），依赖 item.unlocked 控制透明度"
+  ]
+}

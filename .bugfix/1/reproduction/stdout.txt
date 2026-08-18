@@ -1,0 +1,1 @@
+ERROR: hvigorw command not found in PATH. HarmonyOS SDK/DevEco Studio environment is required to execute the reproduction test.

@@ -1,0 +1,34 @@
+{
+  "preconditions": {
+    "inputs": {
+      "dataset_or_case": "在专注页面（FocusPage）启动专注计时会话",
+      "size_or_boundary": "",
+      "other": "计时进行过程中手机熄屏（屏幕熄灭进入锁屏/灭屏状态）"
+    },
+    "environments": {
+      "version": "HarmonyOS SDK 6.0.1(21)，目标设备 phone/tablet",
+      "other": "应用运行于前台专注页面，计时已启动且未完成"
+    }
+  },
+  "expected_behavior": {
+    "description": "手机熄屏后，专注计时应当不受熄屏影响继续正常运行，计时持续累计，直至达到设定的专注时长后正常结束并记录会话。"
+  },
+  "actual_behavior": {
+    "description": "在专注页面进行计时，手机熄屏后计时停止，计时不再继续累计，计时被中断。"
+  },
+  "possible_root_cause": "",
+  "reproduction_seed_snippet": "",
+  "minimal_reproduction_steps": "1. 打开知时应用，进入专注页面（FocusPage）；2. 设置一段专注时长并点击开始计时；3. 确认计时正在正常倒计时/累计；4. 按下电源键使手机熄屏；5. 等待数秒后点亮屏幕回到专注页面；6. 观察到计时已停止，未在熄屏期间继续运行（期望：计时应在熄屏期间持续运行）。",
+  "log_excerpt": "",
+  "log_evidence": {
+    "log_path": "",
+    "start_line": "",
+    "end_line": "",
+    "summary": "",
+    "content": ""
+  },
+  "workflow_readiness": {
+    "decision": "PASS",
+    "missing_or_insufficient_information": ""
+  }
+}

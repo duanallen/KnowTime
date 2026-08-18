@@ -1,0 +1,40 @@
+diff --git a/entry/src/main/ets/viewmodel/FocusViewModel.ets b/entry/src/main/ets/viewmodel/FocusViewModel.ets
+index cd1d1f0..de0ec79 100644
+--- a/entry/src/main/ets/viewmodel/FocusViewModel.ets
++++ b/entry/src/main/ets/viewmodel/FocusViewModel.ets
+@@ -215,6 +215,18 @@ export class FocusViewModel {
+       this.focusState = FocusState.IDLE
+       return
+     }
++    // 若处于暂停状态结束，补录当前暂停为中断，确保心流得分正确扣减
++    if (this.focusState === FocusState.PAUSED && this.interruptionStartTime > 0) {
++      const pauseDuration = Math.floor((Date.now() - this.interruptionStartTime) / 1000)
++      if (pauseDuration > 0) {
++        this.currentSession.interruptions.push({
++          id: this.generateId(),
++          timestamp: this.interruptionStartTime,
++          duration: pauseDuration,
++          reason: '用户暂停'
++        })
++      }
++    }
+     this.currentSession.endTime = Date.now()
+     this.currentSession.actualDuration = this.elapsedSeconds
+     this.currentSession.flowScore = this.calculateFlowScore()
+@@ -527,9 +539,14 @@ export class FocusViewModel {
+     if (!this.currentSession) return 0
+     const planned = this.currentSession.plannedDuration
+     const actual = this.elapsedSeconds
+-    const rate = Math.min(actual / Math.max(planned, 1), 1)
++    // 完成率：实际时长/计划时长，最高1.0，权重40%
++    const completionRate = Math.min(actual / Math.max(planned, 1), 1)
++    // 专注深度：以90分钟（5400秒）为满分基准，体现心流沉浸深度，权重60%
++    const depthScore = Math.min(actual / 5400, 1)
++    const baseScore = completionRate * 40 + depthScore * 60
++    // 中断惩罚：每次中断扣10分，中断会打断心流状态
+     const interruptionCount = this.currentSession.interruptions.length
+-    return Math.max(0, Math.min(100, Math.floor(rate * 100 - interruptionCount * 15)))
++    return Math.max(0, Math.min(100, Math.floor(baseScore - interruptionCount * 10)))
+   }
+ 
+   private triggerVibration(): void {

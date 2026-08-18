@@ -22,6 +22,9 @@ export enum AnalyticsEvent {
   PRIVACY_AGREE = 'privacy_agree',
   PRIVACY_DISAGREE = 'privacy_disagree',
   PRIVACY_VERSION_UPDATE = 'privacy_version_update',
+  ABOUT_VIEW = 'about_view',
+  ABOUT_OPEN_PRIVACY = 'about_open_privacy',
+  ABOUT_OPEN_FEEDBACK = 'about_open_feedback',
 }
 
 interface AnalyticsPayload {

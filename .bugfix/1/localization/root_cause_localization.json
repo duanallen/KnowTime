@@ -1,0 +1,35 @@
+{
+  "issue_number": "1",
+  "localization_status": "plausible",
+  "root_cause_summary": "FocusViewModel.startTimer() 使用 setInterval 每秒执行 elapsedSeconds++ 的纯计数器递增方式计时，未记录计时起始时间戳进行补偿；HarmonyOS 页面熄屏进入 inactive 状态时 setInterval 回调被系统挂起，导致计时停止；FocusPage 未实现 onPageShow 生命周期回调在页面恢复时重新计算已用时长。",
+  "faulty_logic": "计时器基于 setInterval 计数器递增（elapsedSeconds++）而非基于时间戳计算（Date.now() - startTimestamp），且无页面恢复时的补偿机制",
+  "impact_scope": {
+    "files": [
+      "entry/src/main/ets/viewmodel/FocusViewModel.ets",
+      "entry/src/main/ets/pages/FocusPage.ets"
+    ],
+    "methods": [
+      "FocusViewModel.startTimer()",
+      "FocusViewModel.startSession()",
+      "FocusViewModel.resumeSession()"
+    ],
+    "execution_path": "用户在专注页面开始计时 -> 手机熄屏 -> 页面 inactive -> setInterval 挂起 -> elapsedSeconds 停止增长 -> 计时中断"
+  },
+  "top_files": [
+    "entry/src/main/ets/viewmodel/FocusViewModel.ets",
+    "entry/src/main/ets/pages/FocusPage.ets"
+  ],
+  "top_ranges": [
+    {
+      "file": "entry/src/main/ets/viewmodel/FocusViewModel.ets",
+      "range": "249-262",
+      "description": "startTimer() setInterval 纯计数器递增"
+    },
+    {
+      "file": "entry/src/main/ets/pages/FocusPage.ets",
+      "range": "44-86",
+      "description": "无 onPageShow 恢复补偿机制"
+    }
+  ],
+  "evidence_basis": "静态代码分析：FocusViewModel.ets 第249-262行 setInterval 计数器递增无时间戳补偿；FocusPage.ets 无 onPageShow 回调（grep 确认仅 Index.ets 有 onPageShow）"
+}

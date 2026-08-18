@@ -1,0 +1,17 @@
+{
+  "issue_number": "2",
+  "reproduction_result": "REPRODUCED",
+  "reproduction_strategy": "STATIC_CODE_ANALYSIS",
+  "mt_required": false,
+  "mt_executed": false,
+  "reproduction_analysis": "通过静态代码分析确认缺陷复现。ProfilePage.ets 定义了 8 个成就勋章（第19-28行），但 loadData()（第45-58行）仅对 achievements[0].unlocked（完成第一次专注）、achievements[1].unlocked（连续7天）、achievements[2].unlocked（累计100小时）设置了判定逻辑，剩余 5 个勋章（心流大师、早起冠军、目标达成、专注猎人、书虫）的 unlocked 始终为 false，无任何判定逻辑。此外 achievements 为 private 普通字段（第19行）而非 @State 装饰，修改 unlocked 不会触发 ArkUI 响应式刷新，即使前 3 个勋章的判定结果也无法可靠反映到 UI。运行时测试执行因环境限制（hvigorw 不在 PATH）无法完成，但静态证据已明确确认缺陷机制。",
+  "diagnostic_traces_injected": true,
+  "diagnostic_trace_locations": "ProfilePage.ets loadData() method and achievements field",
+  "diagnostic_trace_output_observed": false,
+  "trace_evidence_impact": "运行时 trace 因 HarmonyOS SDK 不在 PATH 无法收集；静态代码分析已充分确认仅 3/8 勋章有判定逻辑且 achievements 非 @State 是成就勋章功能缺失的根因证据",
+  "execution_evidence": {
+    "stdout": "hvigorw not found in PATH",
+    "exit_code": 127,
+    "environment_limitation": "HarmonyOS SDK (hvigorw/hdc) 不在当前 PATH，需 DevEco Studio 环境执行运行时测试"
+  }
+}

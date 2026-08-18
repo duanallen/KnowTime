@@ -1,0 +1,17 @@
+{
+  "issue_number": "3",
+  "reproduction_result": "REPRODUCED",
+  "reproduction_strategy": "STATIC_CODE_ANALYSIS",
+  "mt_required": false,
+  "mt_executed": false,
+  "reproduction_analysis": "通过静态代码分析确认缺陷复现。FocusViewModel.stopSession()（第212行）在用户从 PAUSED 状态结束会话时，不检查当前是否处于暂停状态，也不将正在进行的暂停记录为 InterruptionRecord。中断仅在 resumeSession()（第193行）中记录——当用户暂停后恢复时才 push 到 interruptions 数组。因此暂停→结束路径中 interruptions.length=0，calculateFlowScore() 不扣分。",
+  "diagnostic_traces_injected": false,
+  "diagnostic_trace_locations": "",
+  "diagnostic_trace_output_observed": false,
+  "trace_evidence_impact": "静态代码分析已充分确认根因",
+  "execution_evidence": {
+    "stdout": "",
+    "exit_code": 0,
+    "environment_limitation": "HarmonyOS SDK 不在 PATH，基于静态代码分析确认"
+  }
+}

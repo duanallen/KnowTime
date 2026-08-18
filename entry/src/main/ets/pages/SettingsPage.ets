@@ -4,7 +4,8 @@ import { common } from '@kit.AbilityKit'
 import { picker } from '@kit.CoreFileKit'
 import { preferences } from '@kit.ArkData'
 import { resourceManager } from '@kit.LocalizationKit'
-import { router } from '@kit.ArkUI'
+import { router, promptAction } from '@kit.ArkUI'
+import { AppInfoService } from '../services/AppInfoService'
 
 interface SettingRow {
   label: string
@@ -27,6 +28,7 @@ export struct SettingsPage {
   @State totalMinutes: number = 0
   @State ringtoneLabel: string = '系统默认'
   @State showRingtonePicker: boolean = false
+  @State aboutVersionValue: string = 'v1.0.0'
   private db: DatabaseHelper = DatabaseHelper.getInstance()
   private hasInit: boolean = false
   private group1: SettingRow[] = [
@@ -41,7 +43,7 @@ export struct SettingsPage {
     { label: '深色模式', value: '跟随系统', isToggle: false },
   ]
   private group3: SettingRow[] = [
-    { label: '关于知时', value: 'v1.0.0', isToggle: false },
+    { label: '关于知时', value: '', isToggle: false },
     { label: '隐私政策', value: '', isToggle: false },
     { label: '意见反馈', value: '', isToggle: false },
   ]
@@ -58,7 +60,19 @@ export struct SettingsPage {
     await this.db.init(ctx)
     await this.refreshData()
     await this.loadRingtoneName(ctx)
+    await this.loadAboutVersion(ctx)
     this.hasInit = true
+  }
+
+  private async loadAboutVersion(ctx: common.UIAbilityContext): Promise<void> {
+    try {
+      const version = await AppInfoService.getVersionName(ctx)
+      if (version && version.length > 0) {
+        this.aboutVersionValue = version
+      }
+    } catch (e) {
+      this.aboutVersionValue = 'v1.0.0'
+    }
   }
 
   private async loadRingtoneName(ctx: common.UIAbilityContext): Promise<void> {
@@ -225,7 +239,9 @@ export struct SettingsPage {
                 Row() {
                   Text(item.label).fontSize(15).fontColor('#1E293B').layoutWeight(1)
                   Row({ space: 4 }) {
-                    if (item.value.length > 0) {
+                    if (item.label === '关于知时') {
+                      Text(this.aboutVersionValue).fontSize(13).fontColor('#94A3B8')
+                    } else if (item.value.length > 0) {
                       Text(item.value).fontSize(13).fontColor('#94A3B8')
                     }
                     Text('>').fontSize(16).fontColor('#CBD5E1')
@@ -233,10 +249,16 @@ export struct SettingsPage {
                 }
                 .width('100%').height(52).padding({ left: 16, right: 12 })
                 .onClick(() => {
-                  if (item.label === '隐私政策') {
+                  if (item.label === '关于知时') {
+                    router.pushUrl({ url: 'pages/AboutPage' }).catch((e: Error) => {
+                      promptAction.showToast({ message: '页面打开失败，请稍后重试' })
+                    })
+                  } else if (item.label === '隐私政策') {
                     const routeParams: Record<string, string> = {}
                     routeParams['displayMode'] = 'view'
                     router.pushUrl({ url: 'pages/PrivacyPolicyPage', params: routeParams })
+                  } else if (item.label === '意见反馈') {
+                    promptAction.showToast({ message: '功能暂不可用，请稍后重试' })
                   }
                 })
                 .border({ width: { bottom: idx < this.group3.length - 1 ? 0.5 : 0 }, color: '#F1F5F9' })

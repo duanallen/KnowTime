@@ -1,0 +1,8 @@
+﻿node.exe : EPERM: operation not permitted, mkdir 'C:\Users\19173\.hvigor\project_caches\3469d67c80712db8c21e591235db270
+f\workspace\node_modules\@ohos'
+所在位置 D:\work\code\AICode\HarmonyOS\KnowTime\stop_daemon.ps1:4 字符: 11
++ $output = & 'D:\software\toolInstall\DevEcoStudio6.1.1Release\DevEco  ...
++           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (EPERM: operatio..._modules\@ohos':String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 

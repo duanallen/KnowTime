@@ -1,0 +1,17 @@
+{
+  "issue_number": "1",
+  "reproduction_result": "REPRODUCED",
+  "reproduction_strategy": "STATIC_CODE_ANALYSIS",
+  "mt_required": false,
+  "mt_executed": false,
+  "reproduction_analysis": "通过静态代码分析确认缺陷复现。FocusViewModel.startTimer()（第249-262行）使用 setInterval(() => { this.elapsedSeconds++ ... }, 1000) 纯计数器递增方式计时。在 HarmonyOS 中，页面熄屏进入 inactive 状态时 setInterval 回调被系统挂起/节流，导致 elapsedSeconds 停止增长，计时中断。FocusPage.ets 未实现 onPageShow 生命周期回调来在页面恢复时基于时间戳重新计算已用时长，FocusViewModel 也未记录计时起始时间戳用于补偿。运行时测试执行因环境限制（hvigorw 不在 PATH）无法完成，但静态证据已明确确认缺陷机制。",
+  "diagnostic_traces_injected": true,
+  "diagnostic_trace_locations": "FocusViewModel.ets startTimer() method",
+  "diagnostic_trace_output_observed": false,
+  "trace_evidence_impact": "运行时 trace 因 HarmonyOS SDK 不在 PATH 无法收集；静态代码分析已充分确认 setInterval 纯计数器递增且无时间戳补偿机制是计时在熄屏时停止的根因证据",
+  "execution_evidence": {
+    "stdout": "hvigorw not found in PATH",
+    "exit_code": 127,
+    "environment_limitation": "HarmonyOS SDK (hvigorw/hdc) 不在当前 PATH，需 DevEco Studio 环境执行运行时测试"
+  }
+}

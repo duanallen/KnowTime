@@ -1,0 +1,11 @@
+{
+  "issue_number": "1",
+  "search_root": "D:\\work\\code\\AICode\\HarmonyOS\\KnowTime\\entry\\src\\main\\ets",
+  "entry_point": "FocusViewModel#startTimer",
+  "module_scope": "entry",
+  "build_cmd": "hvigorw assembleHap",
+  "run_cmd": "hvigorw ohosTest",
+  "reproducer_path": "D:\\work\\code\\AICode\\HarmonyOS\\KnowTime\\.bugfix\\1\\reproduction\\FocusTimerScreenOff.test.ets",
+  "build_run_split_justification": "HarmonyOS ohosTest 命令会编译所需源码后执行测试，build_cmd 仅在需要单独编译时使用",
+  "environment_note": "HarmonyOS SDK (hvigorw/hdc) 不在当前 PATH 中，需 DevEco Studio 环境执行"
+}
