@@ -23,6 +23,8 @@ export default class EntryAbility extends UIAbility {
     AnalyticsService.getInstance().init(this.context as common.UIAbilityContext)
     // 注册通知槽位（支持响铃）
     this.initNotificationSlot()
+    // 主动请求通知权限（提醒服务依赖通知，isNotificationEnabled 在部分设备上不可靠，直接请求）
+    this.requestNotificationPermission()
     // 锁屏安全启动编排：锁屏时跳过预注册，待解锁或前台时补偿
     LockSafeStartupCoordinator.getInstance().orchestrateOnCreate(
       ReminderActionAdapter.wrapPreRegister(this.context as common.UIAbilityContext)
@@ -59,6 +61,19 @@ export default class EntryAbility extends UIAbility {
       )
     } catch (err) {
       hilog.error(DOMAIN, TAG, 'addSlot error: %{public}s', JSON.stringify(err))
+    }
+  }
+
+  /** 主动请求通知权限，reminderAgentManager 依赖通知通道才能响铃 */
+  private requestNotificationPermission(): void {
+    try {
+      notificationManager.requestEnableNotification(this.context as common.UIAbilityContext).then(() => {
+        hilog.info(DOMAIN, TAG, 'requestEnableNotification succeeded')
+      }).catch((e: Error) => {
+        hilog.warn(DOMAIN, TAG, 'requestEnableNotification rejected: %{public}s', e.message)
+      })
+    } catch (err) {
+      hilog.error(DOMAIN, TAG, 'requestNotificationPermission error: %{public}s', (err as Error).message)
     }
   }
 

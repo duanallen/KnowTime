@@ -1,7 +1,7 @@
 import { FocusSession, FocusState, SessionType, InterruptionRecord } from '../models/FocusSession'
 import { DatabaseHelper } from '../database/DatabaseHelper'
 import { AnalyticsService } from '../analytics/AnalyticsService'
-import { Context } from '@kit.AbilityKit'
+import { Context, common } from '@kit.AbilityKit'
 import { hilog } from '@kit.PerformanceAnalysisKit'
 import vibrator from '@ohos.vibrator'
 import notificationManager from '@ohos.notificationManager'
@@ -13,6 +13,9 @@ import { resourceManager } from '@kit.LocalizationKit'
 
 const TAG = 'FocusVM'
 const DOMAIN = 0x0003
+// 系统闹钟比计划结束时刻晚 1 秒：前台时应用在到点瞬间取消系统闹钟并播放自定义铃声，
+// 1 秒余量避免系统闹钟先响造成双响；熄屏时仅晚 1 秒，仍满足"准时"。
+const END_REMINDER_DELAY_SECONDS = 1
 
 @ObservedV2
 export class FocusViewModel {
@@ -32,6 +35,9 @@ export class FocusViewModel {
   private reminderVibrationId: number = -1
   private reminderAudioStreamId: number = -1
   private reminderAgentId: number = -1
+  // 开始/恢复专注时预注册的"到点"系统闹钟，熄屏后台时由系统独立触发响铃
+  private endReminderAgentId: number = -1
+  private endReminderSeq: number = 0
   private runningStartMs: number = 0
   private accumulatedSeconds: number = 0
   private db: DatabaseHelper = DatabaseHelper.getInstance()
@@ -42,6 +48,9 @@ export class FocusViewModel {
   private chimeSoundId: number = -1
   private gentleSoundId: number = -1
   private soundPoolReady: boolean = false
+  // 页面是否可见。熄屏/切后台时页面不可见，此时到点交由系统闹钟响铃，
+  // 避免应用去取消系统闹钟后自身进程又被冻结导致完全不响。
+  private isPageVisible: boolean = true
 
   async init(context: Context): Promise<void> {
     this.appContext = context
@@ -120,16 +129,15 @@ export class FocusViewModel {
       }
       
       // 检查通知权限
-      const hasNotificationPermission = true // 暂时跳过权限检查，避免bundleManager问题
-      // TODO: 在实际项目中需要添加通知权限检查
-      // const bundleInfo = await bundleManager.getBundleInfo(bundleManager.BundleFlag.GET_BUNDLE_INFO_DEFAULT)
-      // const hasNotificationPermission = bundleInfo.requestPermissions.some(permission => 
-      //   permission.permissionName === 'ohos.permission.NOTIFICATION_CONTROLLER' ||
-      //   permission.permissionName === 'ohos.permission.POST_NOTIFICATION'
-      // )
+      let hasNotificationPermission = false
+      try {
+        hasNotificationPermission = await notificationManager.isNotificationEnabled()
+      } catch (e) {
+        hilog.warn(DOMAIN, TAG, 'isNotificationEnabled failed: %{public}s', (e as Error).message)
+      }
       
       if (!hasNotificationPermission) {
-        hilog.warn(DOMAIN, TAG, 'Notification permission not granted')
+        hilog.warn(DOMAIN, TAG, 'Notification not enabled, reminders will not fire')
         return false
       }
       
@@ -137,6 +145,42 @@ export class FocusViewModel {
       return true
     } catch (err) {
       hilog.error(DOMAIN, TAG, 'Permission check failed: %{public}s', (err as Error).message)
+      return false
+    }
+  }
+
+  /**
+   * 确保通知权限已开启。
+   * reminderAgentManager 的提醒由系统通知通道承载，通知被关闭时系统会直接拦截
+   * （设备日志：ReminderControl ... notification not allowed），熄屏后就不会响铃。
+   *
+   * 注意：isNotificationEnabled() 在部分设备上返回值不可靠（实测 allowEnableNotification=false
+   * 时仍返回 true），因此不再依赖其判断，而是直接调用 requestEnableNotification。
+   * 该 API 在通知已开启时为空操作，未开启时弹出系统授权框。
+   */
+  private async ensureNotificationEnabled(): Promise<boolean> {
+    try {
+      // 直接请求开启通知（已开启时为空操作）
+      if (this.appContext) {
+        try {
+          await notificationManager.requestEnableNotification(this.appContext as common.UIAbilityContext)
+          hilog.info(DOMAIN, TAG, 'requestEnableNotification done')
+        } catch (reqErr) {
+          // 用户拒绝或系统不弹窗时不阻断流程，后续 publish 失败时会再次提示
+          hilog.warn(DOMAIN, TAG, 'requestEnableNotification rejected: %{public}s', (reqErr as Error).message)
+        }
+      }
+      // 再做一次检查（仅供日志参考，不作为阻断依据）
+      let enabled: boolean = true
+      try {
+        enabled = await notificationManager.isNotificationEnabled()
+      } catch (e) {
+        hilog.warn(DOMAIN, TAG, 'isNotificationEnabled failed: %{public}s', (e as Error).message)
+      }
+      hilog.info(DOMAIN, TAG, 'notification check done, isNotificationEnabled=%{public}s', enabled ? 'true' : 'false')
+      return enabled
+    } catch (e) {
+      hilog.error(DOMAIN, TAG, 'ensureNotificationEnabled failed: %{public}s', (e as Error).message)
       return false
     }
   }
@@ -157,7 +201,10 @@ export class FocusViewModel {
     return `${ts}_${rand}`
   }
 
-  startSession(taskName: string, tag: string, plannedSeconds: number, sessionType: SessionType): void {
+  async startSession(taskName: string, tag: string, plannedSeconds: number, sessionType: SessionType): Promise<boolean> {
+    // 系统提醒是熄屏后唯一可靠的响铃通道，发布前确保通知权限已开启。
+    // 放在会话计时开始之前，避免授权弹窗耗时被计入专注时长。
+    await this.ensureNotificationEnabled()
     this.stopTimer()
     const session: FocusSession = {
       id: this.generateId(),
@@ -177,7 +224,10 @@ export class FocusViewModel {
     this.accumulatedSeconds = 0
     this.focusState = FocusState.RUNNING
     this.startTimer()
+    // 等待系统提醒注册结果，决定是否提示用户开启通知
+    const reminderRegistered: boolean = await this.preRegisterEndReminder(plannedSeconds)
     this.analytics.trackFocusStart(tag)
+    return reminderRegistered
   }
 
   pauseSession(): void {
@@ -187,6 +237,7 @@ export class FocusViewModel {
     this.interruptionStartTime = Date.now()
     this.accumulatedSeconds = this.elapsedSeconds
     this.stopTimer()
+    this.cancelEndReminder()
     this.analytics.trackFocusPause(this.elapsedSeconds)
   }
 
@@ -206,11 +257,13 @@ export class FocusViewModel {
     this.focusState = FocusState.RUNNING
     this.accumulatedSeconds = this.elapsedSeconds
     this.startTimer()
+    this.preRegisterEndReminder(this.currentSession.plannedDuration - this.elapsedSeconds).catch(() => {})
     this.analytics.trackFocusResume()
   }
 
   async stopSession(): Promise<void> {
     this.stopTimer()
+    this.cancelEndReminder()
     if (!this.currentSession) {
       this.focusState = FocusState.IDLE
       return
@@ -269,7 +322,7 @@ export class FocusViewModel {
       if (this.focusState === FocusState.RUNNING) {
         this.recalcElapsed()
       }
-    }, 1000)
+    }, 250)
   }
 
   private recalcElapsed(): void {
@@ -294,6 +347,12 @@ export class FocusViewModel {
 
   private async completeSession(): Promise<void> {
     this.stopTimer()
+    // 页面可见时应用自己播放自定义铃声，先取消系统闹钟（闹钟留了 1 秒余量）。
+    // 页面不可见（熄屏/后台）时不能取消：进程随时可能被冻结，系统闹钟才是唯一可靠通道。
+    const visible: boolean = this.isPageVisible
+    if (visible) {
+      this.cancelEndReminder()
+    }
     if (!this.currentSession) {
       this.focusState = FocusState.IDLE
       return
@@ -322,8 +381,16 @@ export class FocusViewModel {
     this.todaySessions.unshift(saved)
     this.dailyTotalMinutes += Math.floor(this.currentSession.plannedDuration / 60)
 
-    // 启动持续提醒，而不是立即重置状态
-    this.startReminder()
+    if (visible) {
+      // 前台到点：应用内铃声 + 震动
+      this.startReminder()
+    } else {
+      // 后台/熄屏到点：保留系统闹钟，由其独立响铃与震动；应用侧仅结束计时
+      hilog.info(DOMAIN, TAG, 'session completed while hidden, keep system reminder')
+      this.currentSession = null
+      this.elapsedSeconds = 0
+      this.focusState = FocusState.IDLE
+    }
   }
 
   private stopTimer(): void {
@@ -332,20 +399,119 @@ export class FocusViewModel {
       this.timerId = -1
     }
   }
-  
-  private async startReminder(): Promise<void> {
-    // 检查权限
-    const hasPermission = await this.checkPermissions()
-    if (!hasPermission) {
-      hilog.error(DOMAIN, TAG, 'Missing permissions for reminder')
-      return
+
+  /** 页面可见性变化（熄屏/切后台时页面不可见） */
+  setPageVisible(visible: boolean): void {
+    this.isPageVisible = visible
+    hilog.info(DOMAIN, TAG, 'page visible=%{public}s', visible ? 'true' : 'false')
+  }
+
+
+  /**
+   * 预注册"计划结束时刻"的系统闹钟。
+   * 熄屏/后台时应用内 setInterval 会被系统挂起，无法主动触发到点提醒，
+   * 因此改由系统闹钟在到点时刻独立响铃(ALARM 通道)，不依赖应用存活。
+   * @param remainingSeconds 距离本次专注结束还需的秒数
+   */
+  private preRegisterEndReminder(remainingSeconds: number): Promise<boolean> {
+    return new Promise<boolean>((resolve) => {
+      this.cancelEndReminder()
+      if (remainingSeconds <= 0) {
+        resolve(false)
+        return
+      }
+      const seq: number = ++this.endReminderSeq
+      const endTimeMs: number = Date.now() + (remainingSeconds + END_REMINDER_DELAY_SECONDS) * 1000
+      const endTime: Date = new Date(endTimeMs)
+      let retryCount: number = 0
+      const tryPublish = (): void => {
+        try {
+          reminderAgentManager.publishReminder({
+            reminderType: reminderAgentManager.ReminderType.REMINDER_TYPE_CALENDAR,
+            dateTime: {
+              year: endTime.getFullYear(),
+              month: endTime.getMonth() + 1,
+              day: endTime.getDate(),
+              hour: endTime.getHours(),
+              minute: endTime.getMinutes(),
+              second: endTime.getSeconds()
+            },
+            ringDuration: 60,
+            title: '知时',
+            content: '专注已完成，1分钟内可手动结束提醒',
+            expiredContent: '专注提醒已结束',
+            snoozeTimes: 0,
+            ringChannel: reminderAgentManager.RingChannel.RING_CHANNEL_ALARM,
+            actionButton: [
+              {
+                title: '停止提醒',
+                type: reminderAgentManager.ActionButtonType.ACTION_BUTTON_TYPE_CLOSE
+              }
+            ]
+          } as reminderAgentManager.ReminderRequestCalendar).then((id: number) => {
+            if (seq !== this.endReminderSeq) {
+              reminderAgentManager.cancelReminder(id).catch(() => {})
+              resolve(false)
+              return
+            }
+            this.endReminderAgentId = id
+            hilog.info(DOMAIN, TAG, 'end reminder pre-registered id=%{public}d atMs=%{public}d time=%{public}s',
+              id, endTimeMs, endTime.toLocaleTimeString())
+            resolve(true)
+          }).catch((err: BusinessError) => {
+            const errCode = err.code
+            hilog.error(DOMAIN, TAG, 'pre-register end reminder failed (code=%{public}d): %{public}s', errCode, err.message)
+            if (this.appContext) {
+              notificationManager.requestEnableNotification(this.appContext as common.UIAbilityContext).catch(() => {})
+            }
+            if (errCode === 1700002 && retryCount === 0) {
+              retryCount++
+              hilog.warn(DOMAIN, TAG, 'reminder count exceeded or notification blocked, cancelAllReminders and retry once')
+              reminderAgentManager.cancelAllReminders().then(() => {
+                if (seq === this.endReminderSeq) {
+                  tryPublish()
+                } else {
+                  resolve(false)
+                }
+              }).catch(() => {
+                resolve(false)
+              })
+              return
+            }
+            resolve(false)
+          })
+        } catch (err) {
+          hilog.error(DOMAIN, TAG, 'pre-register end reminder error: %{public}s', (err as Error).message)
+          resolve(false)
+        }
+      }
+      tryPublish()
+    })
+  }
+
+  /** 取消已预注册的到点系统闹钟(幂等) */
+  private cancelEndReminder(): void {
+    this.endReminderSeq++
+    if (this.endReminderAgentId < 0) return
+    const id: number = this.endReminderAgentId
+    this.endReminderAgentId = -1
+    try {
+      reminderAgentManager.cancelReminder(id).then(() => {
+        hilog.info(DOMAIN, TAG, 'end reminder cancelled id=%{public}d', id)
+      }).catch((err: Error) => {
+        hilog.error(DOMAIN, TAG, 'cancel end reminder failed: %{public}s', err.message)
+      })
+    } catch (err) {
+      hilog.error(DOMAIN, TAG, 'cancel end reminder error: %{public}s', (err as Error).message)
     }
-    
+  }
+
+  private async startReminder(): Promise<void> {
+    // 到点瞬间系统通知（1分钟可手动停止）与应用内铃声同时启动
     this.isReminding = true
     this.reminderStartTime = Date.now()
     this.focusState = FocusState.REMINDING
 
-    // 发布1分钟系统闹钟提醒（手表等也支持震动+响铃1分钟，可点通知上的“停止提醒”关闭）
     try {
       const reminderId: number = await reminderAgentManager.publishReminder({
         reminderType: reminderAgentManager.ReminderType.REMINDER_TYPE_TIMER,
@@ -365,15 +531,15 @@ export class FocusViewModel {
       } as reminderAgentManager.ReminderRequestTimer)
       this.reminderAgentId = reminderId
     } catch (autoErr) {
-      hilog.error(DOMAIN, TAG, 'publish system reminder failed: %{public}s', (autoErr as Error).message)
+      hilog.error(DOMAIN, TAG, 'publish immediate reminder failed: %{public}s', (autoErr as Error).message)
     }
 
     // 设置1分钟自动停止的定时器
     this.reminderTimerId = setTimeout(() => {
       this.stopReminder()
     }, 60000)
-    
-    // 启动提醒循环
+
+    // 启动提醒循环（应用内铃声+震动，不依赖通知权限）
     this.startReminderCycle()
   }
   
@@ -479,6 +645,7 @@ export class FocusViewModel {
   
   public stopReminder(): void {
     this.isReminding = false
+    this.cancelEndReminder()
 
     // 取消系统提醒（若取消失败，兜底取消当前应用的全部提醒）
     if (this.reminderAgentId >= 0) {
@@ -658,6 +825,7 @@ export class FocusViewModel {
 
   reset(): void {
     this.stopTimer()
+    this.cancelEndReminder()
     this.stopReminder()
     if (this.soundPool !== null) {
       try {

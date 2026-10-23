@@ -13,6 +13,10 @@
       "value": "知时"
     },
     {
+      "name": "notification_permission_reason",
+      "value": "知时需要发送通知以在专注结束时提醒您"
+    },
+    {
       "name": "form_desc",
       "value": "知时服务卡片"
     },

@@ -3,6 +3,7 @@ import { FocusState, SessionType } from '../models/FocusSession'
 import { AppColors } from '../common/Theme'
 import { TimerRing } from '../components/TimerRing'
 import { common } from '@kit.AbilityKit'
+import { promptAction } from '@kit.ArkUI'
 import { hilog } from '@kit.PerformanceAnalysisKit'
 import { DatabaseHelper } from '../database/DatabaseHelper'
 import vibrator from '@ohos.vibrator'
@@ -88,7 +89,13 @@ export struct FocusPage {
   onPageShow(): void {
     // 页面恢复（如熄屏后亮屏返回）时，基于时间戳重新计算已用时长，
     // 确保熄屏期间计时正常累计，不受页面 inactive 导致 setInterval 挂起的影响
+    this.viewModel.setPageVisible(true)
     this.viewModel.recalculateElapsed()
+  }
+
+  onPageHide(): void {
+    // 熄屏/切后台：页面不可见，到点改由系统闹钟负责响铃与震动
+    this.viewModel.setPageVisible(false)
   }
   
   private isLocked(): boolean {
@@ -330,6 +337,11 @@ export struct FocusPage {
                 .shadow({ radius: 8, color: '#1A73E830', offsetY: 4 })
                 .onClick(() => {
                   this.viewModel.startSession(this.taskName, this.selectedTag, this.selectedDuration * 60, SessionType.DEEP_FOCUS)
+                    .then((reminderRegistered: boolean) => {
+                      if (!reminderRegistered) {
+                        promptAction.showToast({ message: '系统提醒注册失败，请在 设置→通知 中开启知时的通知权限，否则熄屏后无法响铃' })
+                      }
+                    })
                 })
             } else if (this.viewModel.focusState === FocusState.RUNNING) {
               Row({ space: 12 }) {
