@@ -23,6 +23,15 @@ const DB_SECURITY = relationalStore.SecurityLevel.S4
 const TABLE_SESSIONS = 'focus_sessions'
 const TABLE_INTERRUPTIONS = 'interruptions'
 
+/** 中断记录原始行（含所属会话ID，用于数据导出） */
+export interface InterruptionRow {
+  id: string
+  sessionId: string
+  timestamp: number
+  duration: number
+  reason: string
+}
+
 export class DatabaseHelper {
   private static instance: DatabaseHelper
   private store: relationalStore.RdbStore | null = null
@@ -133,6 +142,34 @@ export class DatabaseHelper {
     p.orderByDesc('start_time')
     p.limitAs(limit)
     return this.queryList(p)
+  }
+
+  /** 查询全部会话（数据导出用），按开始时间升序，便于导出的 CSV 按时间排列 */
+  async queryAllSessions(): Promise<FocusSession[]> {
+    if (!this.store) return []
+    const p = new relationalStore.RdbPredicates(TABLE_SESSIONS)
+    p.orderByAsc('start_time')
+    return this.queryList(p)
+  }
+
+  /** 查询全部中断记录（数据导出用），含所属会话ID */
+  async queryAllInterruptionRows(): Promise<InterruptionRow[]> {
+    if (!this.store) return []
+    const p = new relationalStore.RdbPredicates(TABLE_INTERRUPTIONS)
+    p.orderByAsc('timestamp')
+    const resultSet = await this.store.query(p)
+    const list: InterruptionRow[] = []
+    while (resultSet.goToNextRow()) {
+      list.push({
+        id: resultSet.getString(resultSet.getColumnIndex('id')),
+        sessionId: resultSet.getString(resultSet.getColumnIndex('session_id')),
+        timestamp: resultSet.getLong(resultSet.getColumnIndex('timestamp')),
+        duration: resultSet.getLong(resultSet.getColumnIndex('duration')),
+        reason: resultSet.getString(resultSet.getColumnIndex('reason'))
+      })
+    }
+    resultSet.close()
+    return list
   }
 
   private async queryList(predicates: relationalStore.RdbPredicates): Promise<FocusSession[]> {

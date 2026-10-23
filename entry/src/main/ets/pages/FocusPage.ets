@@ -4,6 +4,7 @@ import { AppColors } from '../common/Theme'
 import { TimerRing } from '../components/TimerRing'
 import { common } from '@kit.AbilityKit'
 import { promptAction } from '@kit.ArkUI'
+import { preferences } from '@kit.ArkData'
 import { hilog } from '@kit.PerformanceAnalysisKit'
 import { DatabaseHelper } from '../database/DatabaseHelper'
 import vibrator from '@ohos.vibrator'
@@ -51,6 +52,17 @@ export struct FocusPage {
       hilog.info(DOMAIN, TAG, 'db.init done')
     } catch (e) {
       hilog.error(DOMAIN, TAG, 'db.init failed: %{public}s', (e as Error).message)
+    }
+
+    // 读取设置页配置的默认专注时长（未配置时为 25 分钟）
+    try {
+      const prefs: preferences.Preferences = await preferences.getPreferences(ctx, 'settings_prefs')
+      const defDur: number = await prefs.get('default_duration_minutes', 25) as number
+      if (defDur >= 1 && defDur <= 180) {
+        this.selectedDuration = defDur
+      }
+    } catch (e) {
+      hilog.warn(DOMAIN, TAG, 'load default duration failed: %{public}s', (e as Error).message)
     }
     
     // 检查权限
