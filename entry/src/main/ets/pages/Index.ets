@@ -8,6 +8,7 @@ import { AnalyticsService } from '../analytics/AnalyticsService'
 @Entry
 @Component
 struct Index {
+  @StorageLink('isDarkMode') isDarkMode: boolean = false
   @State currentTabIndex: number = 0
   @Provide refreshKey: number = 0
   private tabIcons: string[] = ['◉', '☰', '⚙', '◈']
@@ -50,10 +51,10 @@ struct Index {
           Column({ space: 2 }) {
             Text(this.tabIcons[index])
               .fontSize(20)
-              .fontColor(this.currentTabIndex === index ? AppColors.PRIMARY : '#CBD5E1')
+              .fontColor(this.currentTabIndex === index ? AppColors.PRIMARY : AppColors.MUTED)
             Text(title)
               .fontSize(10)
-              .fontColor(this.currentTabIndex === index ? AppColors.PRIMARY : '#94A3B8')
+              .fontColor(this.currentTabIndex === index ? AppColors.PRIMARY : AppColors.TEXT_HINT)
               .fontWeight(this.currentTabIndex === index ? FontWeight.Medium : FontWeight.Normal)
           }
           .layoutWeight(1)
@@ -63,8 +64,8 @@ struct Index {
       }
       .width('100%')
       .height(56)
-      .backgroundColor('#FFFFFF')
-      .shadow({ radius: 16, color: '#0F172A10', offsetY: -4 })
+      .backgroundColor(AppColors.BG_CARD)
+      .shadow({ radius: 16, color: AppColors.TAB_SHADOW, offsetY: -4 })
     }
     .width('100%')
     .height('100%')

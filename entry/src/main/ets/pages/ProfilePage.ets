@@ -13,6 +13,7 @@ interface Achievement {
 @Entry
 @Component
 export struct ProfilePage {
+  @StorageLink('isDarkMode') isDarkMode: boolean = false
   @Prop @Watch('onRefresh') refreshKey: number = 0
   @State totalMinutes: number = 0
   @State sessionCount: number = 0
@@ -121,63 +122,63 @@ export struct ProfilePage {
         Column({ space: 24 }) {
           Row({ space: 16 }) {
             Column() {
-              Text('知').fontSize(36).fontWeight(FontWeight.Bold).fontColor('#FFFFFF')
+              Text('知').fontSize(36).fontWeight(FontWeight.Bold).fontColor(AppColors.ON_ACCENT)
             }
             .width(72).height(72).borderRadius(36)
             .backgroundColor(AppColors.PRIMARY).justifyContent(FlexAlign.Center)
 
             Column({ space: 4 }) {
-              Text('知时用户').fontSize(20).fontWeight(FontWeight.Bold).fontColor('#1E293B')
-              Text('让每一分钟，都被看见').fontSize(13).fontColor('#94A3B8')
+              Text('知时用户').fontSize(20).fontWeight(FontWeight.Bold).fontColor(AppColors.TEXT_PRIMARY)
+              Text('让每一分钟，都被看见').fontSize(13).fontColor(AppColors.TEXT_HINT)
             }
             .alignItems(HorizontalAlign.Start).layoutWeight(1)
 
             Text(`#${this.streakDays}`)
-              .fontSize(14).fontWeight(FontWeight.Bold).fontColor('#F59E0B')
+              .fontSize(14).fontWeight(FontWeight.Bold).fontColor(AppColors.WARNING)
               .padding({ left: 10, right: 10, top: 6, bottom: 6 })
-              .backgroundColor('#FEF3C7').borderRadius(12)
+              .backgroundColor(AppColors.WARNING_BG).borderRadius(12)
           }
-          .width('100%').padding(24).backgroundColor('#FFFFFF').borderRadius(20)
+          .width('100%').padding(24).backgroundColor(AppColors.BG_CARD).borderRadius(20)
 
           Row({ space: 0 }) {
             Column() {
-              Text(this.formatHours(this.totalMinutes)).fontSize(26).fontWeight(FontWeight.Bold).fontColor('#1A73E8')
-              Text('小时').fontSize(12).fontColor('#94A3B8')
+              Text(this.formatHours(this.totalMinutes)).fontSize(26).fontWeight(FontWeight.Bold).fontColor(AppColors.PRIMARY)
+              Text('小时').fontSize(12).fontColor(AppColors.TEXT_HINT)
             }.layoutWeight(1)
             Column() {
-              Text(`${this.sessionCount}`).fontSize(26).fontWeight(FontWeight.Bold).fontColor('#0D9488')
-              Text('次专注').fontSize(12).fontColor('#94A3B8')
+              Text(`${this.sessionCount}`).fontSize(26).fontWeight(FontWeight.Bold).fontColor(AppColors.FOCUS_ACTIVE)
+              Text('次专注').fontSize(12).fontColor(AppColors.TEXT_HINT)
             }.layoutWeight(1)
             Column() {
-              Text(`${this.streakDays}`).fontSize(26).fontWeight(FontWeight.Bold).fontColor('#F59E0B')
-              Text('天连续').fontSize(12).fontColor('#94A3B8')
+              Text(`${this.streakDays}`).fontSize(26).fontWeight(FontWeight.Bold).fontColor(AppColors.WARNING)
+              Text('天连续').fontSize(12).fontColor(AppColors.TEXT_HINT)
             }.layoutWeight(1)
           }
-          .width('100%').padding(20).backgroundColor('#FFFFFF').borderRadius(16)
+          .width('100%').padding(20).backgroundColor(AppColors.BG_CARD).borderRadius(16)
 
           Column({ space: 12 }) {
-            Text('成就勋章').fontSize(15).fontWeight(FontWeight.Medium).fontColor('#1E293B')
+            Text('成就勋章').fontSize(15).fontWeight(FontWeight.Medium).fontColor(AppColors.TEXT_PRIMARY)
             Grid() {
               ForEach(this.achievements, (item: Achievement) => {
                 GridItem() {
                   Column({ space: 4 }) {
                     Text(item.icon).fontSize(30).opacity(item.unlocked ? 1 : 0.25)
-                    Text(item.title).fontSize(12).fontColor('#475569').opacity(item.unlocked ? 1 : 0.35).maxLines(1)
+                    Text(item.title).fontSize(12).fontColor(AppColors.TEXT_SUBTLE).opacity(item.unlocked ? 1 : 0.35).maxLines(1)
                   }
                   .justifyContent(FlexAlign.Center).alignItems(HorizontalAlign.Center)
                   .width('100%').padding({ top: 14, bottom: 14 })
-                  .backgroundColor('#FFFFFF').borderRadius(12)
+                  .backgroundColor(AppColors.BG_CARD).borderRadius(12)
                 }
               })
             }
             .columnsTemplate('1fr 1fr 1fr 1fr').rowsGap(8).columnsGap(8).width('100%')
           }
-          .width('100%').padding(20).backgroundColor('#F8FAFC').borderRadius(16)
+          .width('100%').padding(20).backgroundColor(AppColors.BG_PRIMARY).borderRadius(16)
 
           Column() {
             Row() {
-              Text('隐私政策').fontSize(15).fontColor('#1E293B').layoutWeight(1)
-              Text('>').fontSize(16).fontColor('#CBD5E1')
+              Text('隐私政策').fontSize(15).fontColor(AppColors.TEXT_PRIMARY).layoutWeight(1)
+              Text('>').fontSize(16).fontColor(AppColors.MUTED)
             }
             .width('100%').height(52).padding({ left: 16, right: 12 })
             .onClick(() => {
@@ -186,7 +187,7 @@ export struct ProfilePage {
               router.pushUrl({ url: 'pages/PrivacyPolicyPage', params: routeParams })
             })
           }
-          .width('100%').backgroundColor('#FFFFFF').borderRadius(16)
+          .width('100%').backgroundColor(AppColors.BG_CARD).borderRadius(16)
 
           Blank().height(20)
         }
@@ -194,6 +195,6 @@ export struct ProfilePage {
       }
       .layoutWeight(1).scrollBar(BarState.Off)
     }
-    .width('100%').height('100%').backgroundColor('#F8FAFC')
+    .width('100%').height('100%').backgroundColor(AppColors.BG_PRIMARY)
   }
 }

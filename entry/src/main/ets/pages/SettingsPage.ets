@@ -8,6 +8,8 @@ import { router, promptAction } from '@kit.ArkUI'
 import { hilog } from '@kit.PerformanceAnalysisKit'
 import notificationManager from '@ohos.notificationManager'
 import { AppInfoService } from '../services/AppInfoService'
+import { ThemeService, THEME_MODE_SYSTEM, THEME_MODE_LIGHT, THEME_MODE_DARK } from '../services/ThemeService'
+import { TagService, TAG_MAX_LENGTH, TAG_MAX_COUNT } from '../services/TagService'
 
 const DOMAIN = 0x0005
 const TAG = 'SettingsPage'
@@ -22,6 +24,16 @@ interface RingtoneOption {
   name: string
   label: string
   rawfileName: string
+}
+
+interface ThemeOption {
+  mode: string
+  label: string
+}
+
+interface WhiteNoiseOption {
+  name: string
+  label: string
 }
 
 /** 导出用的结构化 JSON 模型（ArkTS 严格模式要求显式类型） */
@@ -58,6 +70,7 @@ interface ExportPayload {
 @Entry
 @Component
 export struct SettingsPage {
+  @StorageLink('isDarkMode') isDarkMode: boolean = false
   @Prop @Watch('onRefresh') refreshKey: number = 0
   @State notificationOn: boolean = true
   @State defaultDuration: number = 25
@@ -67,16 +80,29 @@ export struct SettingsPage {
   @State showDurationPicker: boolean = false
   @State exporting: boolean = false
   @State aboutVersionValue: string = 'v1.0.0'
+  @State themeModeLabel: string = '跟随系统'
+  @State showThemePicker: boolean = false
+  @State dailyGoal: number = 60
+  @State showGoalPicker: boolean = false
+  @State showTagManager: boolean = false
+  @State manageTags: string[] = []
+  @State newTagInput: string = ''
+  @State whiteNoiseLabel: string = '关闭'
+  @State showWhiteNoisePicker: boolean = false
   private db: DatabaseHelper = DatabaseHelper.getInstance()
   private hasInit: boolean = false
-  // 第一组：专注相关。环境白噪音为占位功能，待实现后再加回
+  // 第一组：专注相关
   private group1: SettingRow[] = [
     { label: '专注提醒', value: '', isToggle: true },
     { label: '完成铃声', value: '', isToggle: false },
     { label: '默认时长', value: '', isToggle: false },
+    { label: '每日目标', value: '', isToggle: false },
+    { label: '标签管理', value: '', isToggle: false },
+    { label: '环境白噪音', value: '', isToggle: false },
   ]
-  // 第二组：数据。跨设备同步/深色模式为占位功能，待实现后再加回
+  // 第二组：外观与数据。跨设备同步为占位功能，待实现后再加回
   private group2: SettingRow[] = [
+    { label: '深色模式', value: '跟随系统', isToggle: false },
     { label: '数据导出', value: 'CSV + JSON', isToggle: false },
   ]
   private group3: SettingRow[] = [
@@ -92,6 +118,17 @@ export struct SettingsPage {
     { name: 'custom', label: '从文件选择...', rawfileName: '' },
   ]
   private durationOptions: number[] = [15, 25, 45, 60, 90]
+  private goalOptions: number[] = [30, 60, 90, 120, 180]
+  private themeOptions: ThemeOption[] = [
+    { mode: THEME_MODE_SYSTEM, label: '跟随系统' },
+    { mode: THEME_MODE_LIGHT, label: '浅色' },
+    { mode: THEME_MODE_DARK, label: '深色' },
+  ]
+  private whiteNoiseOptions: WhiteNoiseOption[] = [
+    { name: 'off', label: '关闭' },
+    { name: 'white', label: '白噪音' },
+    { name: 'rain', label: '雨声' },
+  ]
 
   async aboutToAppear(): Promise<void> {
     const ctx: common.UIAbilityContext = getContext(this) as common.UIAbilityContext
@@ -99,9 +136,61 @@ export struct SettingsPage {
     await this.refreshData()
     await this.loadRingtoneName(ctx)
     await this.loadDefaultDuration(ctx)
+    await this.loadDailyGoal(ctx)
+    await this.loadTags(ctx)
     await this.loadAboutVersion(ctx)
+    await this.loadThemeMode(ctx)
+    await this.loadWhiteNoiseType(ctx)
     await this.refreshNotificationState()
     this.hasInit = true
+  }
+
+  private async loadThemeMode(ctx: common.UIAbilityContext): Promise<void> {
+    try {
+      const prefs: preferences.Preferences = await preferences.getPreferences(ctx, 'settings_prefs')
+      const mode: string = await prefs.get('theme_mode', THEME_MODE_SYSTEM) as string
+      const option: ThemeOption | undefined = this.themeOptions.find((o: ThemeOption) => o.mode === mode)
+      this.themeModeLabel = option ? option.label : '跟随系统'
+    } catch (e) {
+      this.themeModeLabel = '跟随系统'
+    }
+  }
+
+  private onSelectTheme(option: ThemeOption): void {
+    const ctx: common.UIAbilityContext = getContext(this) as common.UIAbilityContext
+    this.themeModeLabel = option.label
+    this.showThemePicker = false
+    ThemeService.getInstance().applyTheme(ctx, option.mode).catch((e: Error) => {
+      hilog.warn(DOMAIN, TAG, 'applyTheme failed: %{public}s', e.message)
+    })
+  }
+
+  /** 读取环境白噪音偏好（缺省 'off'）并刷新行尾显示 */
+  private async loadWhiteNoiseType(ctx: common.UIAbilityContext): Promise<void> {
+    try {
+      const prefs: preferences.Preferences = await preferences.getPreferences(ctx, 'settings_prefs')
+      const type: string = await prefs.get('white_noise_type', 'off') as string
+      const option: WhiteNoiseOption | undefined = this.whiteNoiseOptions.find((o: WhiteNoiseOption) => o.name === type)
+      this.whiteNoiseLabel = option ? option.label : '关闭'
+    } catch (e) {
+      this.whiteNoiseLabel = '关闭'
+    }
+  }
+
+  /**
+   * 选择环境白噪音：写 preferences 并 flush。
+   * 仅承诺"前台专注中"播放：选择非关闭且此刻不在专注时提示用户生效时机。
+   */
+  private onSelectWhiteNoise(option: WhiteNoiseOption): void {
+    const ctx: common.UIAbilityContext = getContext(this) as common.UIAbilityContext
+    this.whiteNoiseLabel = option.label
+    this.showWhiteNoisePicker = false
+    preferences.getPreferences(ctx, 'settings_prefs').then((prefs: preferences.Preferences) => {
+      prefs.put('white_noise_type', option.name).then(() => prefs.flush())
+    })
+    if (option.name !== 'off') {
+      promptAction.showToast({ message: '将在专注进行时自动播放' })
+    }
   }
 
   private async loadAboutVersion(ctx: common.UIAbilityContext): Promise<void> {
@@ -192,6 +281,82 @@ export struct SettingsPage {
       // 开关回弹到真实状态（通知实际仍处于开启）
       setTimeout(() => { this.refreshNotificationState() }, 500)
     }
+  }
+
+  private async loadDailyGoal(ctx: common.UIAbilityContext): Promise<void> {
+    try {
+      const prefs: preferences.Preferences = await preferences.getPreferences(ctx, 'settings_prefs')
+      const val: number = await prefs.get('daily_goal_minutes', 60) as number
+      if (val >= 0 && val <= 1440) {
+        this.dailyGoal = val
+      }
+    } catch (e) {
+      this.dailyGoal = 60
+    }
+  }
+
+  private onSelectGoal(d: number): void {
+    const ctx: common.UIAbilityContext = getContext(this) as common.UIAbilityContext
+    this.dailyGoal = d
+    this.showGoalPicker = false
+    preferences.getPreferences(ctx, 'settings_prefs').then((prefs: preferences.Preferences) => {
+      prefs.put('daily_goal_minutes', d).then(() => prefs.flush())
+    })
+  }
+
+  // ---------------- 标签管理 ----------------
+
+  /** 从 TagService 重新加载标签列表并刷新面板与行尾计数 */
+  private async loadTags(ctx: common.UIAbilityContext): Promise<void> {
+    this.manageTags = await TagService.getInstance().getTags(ctx)
+  }
+
+  /** 添加标签：先在页面侧按同一套规则给出具体失败原因，再落库 */
+  private onAddTag(): void {
+    const tag: string = this.newTagInput.trim()
+    if (tag.length === 0) {
+      promptAction.showToast({ message: '标签名不能为空' })
+      return
+    }
+    if (tag.length > TAG_MAX_LENGTH) {
+      promptAction.showToast({ message: `标签名最多 ${TAG_MAX_LENGTH} 个字符` })
+      return
+    }
+    if (this.manageTags.indexOf(tag) >= 0) {
+      promptAction.showToast({ message: '标签已存在' })
+      return
+    }
+    if (this.manageTags.length >= TAG_MAX_COUNT) {
+      promptAction.showToast({ message: `最多支持 ${TAG_MAX_COUNT} 个标签` })
+      return
+    }
+    const ctx: common.UIAbilityContext = getContext(this) as common.UIAbilityContext
+    TagService.getInstance().addTag(ctx, tag)
+      .then((ok: boolean) => {
+        if (ok) {
+          this.newTagInput = ''
+          return this.loadTags(ctx)
+        }
+        promptAction.showToast({ message: '添加失败，请稍后重试' })
+        return
+      })
+      .catch((e: Error) => {
+        hilog.warn(DOMAIN, TAG, 'addTag failed: %{public}s', e.message)
+      })
+  }
+
+  /** 删除标签：至少保留 1 个，最后一个禁止删除 */
+  private onRemoveTag(tag: string): void {
+    if (this.manageTags.length <= 1) {
+      promptAction.showToast({ message: '至少保留 1 个标签' })
+      return
+    }
+    const ctx: common.UIAbilityContext = getContext(this) as common.UIAbilityContext
+    TagService.getInstance().removeTag(ctx, tag)
+      .then(() => this.loadTags(ctx))
+      .catch((e: Error) => {
+        hilog.warn(DOMAIN, TAG, 'removeTag failed: %{public}s', e.message)
+      })
   }
 
   private onSelectDuration(d: number): void {
@@ -435,34 +600,40 @@ export struct SettingsPage {
           Column({ space: 20 }) {
             Row({ space: 14 }) {
               Column() {
-                Text('知').fontSize(26).fontWeight(FontWeight.Bold).fontColor('#FFFFFF')
+                Text('知').fontSize(26).fontWeight(FontWeight.Bold).fontColor(AppColors.ON_ACCENT)
               }
               .width(56).height(56).borderRadius(28)
-              .backgroundColor('#1A73E8').justifyContent(FlexAlign.Center)
+              .backgroundColor(AppColors.PRIMARY).justifyContent(FlexAlign.Center)
 
               Column({ space: 2 }) {
-                Text('知时用户').fontSize(16).fontWeight(FontWeight.Medium).fontColor('#1E293B')
-                Text(this.formatTime(this.totalMinutes)).fontSize(12).fontColor('#94A3B8')
+                Text('知时用户').fontSize(16).fontWeight(FontWeight.Medium).fontColor(AppColors.TEXT_PRIMARY)
+                Text(this.formatTime(this.totalMinutes)).fontSize(12).fontColor(AppColors.TEXT_HINT)
               }
               .alignItems(HorizontalAlign.Start).layoutWeight(1)
             }
-            .width('100%').padding(20).backgroundColor('#FFFFFF').borderRadius(16)
+            .width('100%').padding(20).backgroundColor(AppColors.BG_CARD).borderRadius(16)
 
             Column() {
               ForEach(this.group1, (item: SettingRow, idx: number) => {
                 Row() {
-                  Text(item.label).fontSize(15).fontColor('#1E293B').layoutWeight(1)
+                  Text(item.label).fontSize(15).fontColor(AppColors.TEXT_PRIMARY).layoutWeight(1)
                   if (item.isToggle) {
                     Toggle({ type: ToggleType.Switch, isOn: this.notificationOn })
                       .onChange((val: boolean) => { this.onNotificationToggle(val) })
                   } else {
                     Row({ space: 4 }) {
                       if (item.label === '完成铃声') {
-                        Text(this.ringtoneLabel).fontSize(13).fontColor('#94A3B8')
+                        Text(this.ringtoneLabel).fontSize(13).fontColor(AppColors.TEXT_HINT)
                       } else if (item.label === '默认时长') {
-                        Text(`${this.defaultDuration}分钟`).fontSize(13).fontColor('#94A3B8')
+                        Text(`${this.defaultDuration}分钟`).fontSize(13).fontColor(AppColors.TEXT_HINT)
+                      } else if (item.label === '每日目标') {
+                        Text(`${this.dailyGoal}分钟`).fontSize(13).fontColor(AppColors.TEXT_HINT)
+                      } else if (item.label === '标签管理') {
+                        Text(`${this.manageTags.length}个`).fontSize(13).fontColor(AppColors.TEXT_HINT)
+                      } else if (item.label === '环境白噪音') {
+                        Text(this.whiteNoiseLabel).fontSize(13).fontColor(AppColors.TEXT_HINT)
                       }
-                      Text('>').fontSize(16).fontColor('#CBD5E1')
+                      Text('>').fontSize(16).fontColor(AppColors.MUTED)
                     }
                   }
                 }
@@ -472,47 +643,57 @@ export struct SettingsPage {
                     this.showRingtonePicker = true
                   } else if (!item.isToggle && item.label === '默认时长') {
                     this.showDurationPicker = true
+                  } else if (!item.isToggle && item.label === '每日目标') {
+                    this.showGoalPicker = true
+                  } else if (!item.isToggle && item.label === '标签管理') {
+                    this.showTagManager = true
+                  } else if (!item.isToggle && item.label === '环境白噪音') {
+                    this.showWhiteNoisePicker = true
                   }
                 })
-                .border({ width: { bottom: idx < this.group1.length - 1 ? 0.5 : 0 }, color: '#F1F5F9' })
+                .border({ width: { bottom: idx < this.group1.length - 1 ? 0.5 : 0 }, color: AppColors.DIVIDER })
               })
             }
-            .width('100%').backgroundColor('#FFFFFF').borderRadius(16)
+            .width('100%').backgroundColor(AppColors.BG_CARD).borderRadius(16)
 
             Column() {
               ForEach(this.group2, (item: SettingRow, idx: number) => {
                 Row() {
-                  Text(item.label).fontSize(15).fontColor('#1E293B').layoutWeight(1)
+                  Text(item.label).fontSize(15).fontColor(AppColors.TEXT_PRIMARY).layoutWeight(1)
                   Row({ space: 4 }) {
-                    if (item.value.length > 0) {
-                      Text(item.value).fontSize(13).fontColor('#94A3B8')
+                    if (item.label === '深色模式') {
+                      Text(this.themeModeLabel).fontSize(13).fontColor(AppColors.TEXT_HINT)
+                    } else if (item.value.length > 0) {
+                      Text(item.value).fontSize(13).fontColor(AppColors.TEXT_HINT)
                     }
-                    Text('>').fontSize(16).fontColor('#CBD5E1')
+                    Text('>').fontSize(16).fontColor(AppColors.MUTED)
                   }
                 }
                 .width('100%').height(52).padding({ left: 16, right: 12 })
-                .opacity(this.exporting ? 0.5 : 1)
+                .opacity(this.exporting && item.label === '数据导出' ? 0.5 : 1)
                 .onClick(() => {
-                  if (item.label === '数据导出') {
+                  if (item.label === '深色模式') {
+                    this.showThemePicker = true
+                  } else if (item.label === '数据导出') {
                     this.exportData()
                   }
                 })
-                .border({ width: { bottom: idx < this.group2.length - 1 ? 0.5 : 0 }, color: '#F1F5F9' })
+                .border({ width: { bottom: idx < this.group2.length - 1 ? 0.5 : 0 }, color: AppColors.DIVIDER })
               })
             }
-            .width('100%').backgroundColor('#FFFFFF').borderRadius(16)
+            .width('100%').backgroundColor(AppColors.BG_CARD).borderRadius(16)
 
             Column() {
               ForEach(this.group3, (item: SettingRow, idx: number) => {
                 Row() {
-                  Text(item.label).fontSize(15).fontColor('#1E293B').layoutWeight(1)
+                  Text(item.label).fontSize(15).fontColor(AppColors.TEXT_PRIMARY).layoutWeight(1)
                   Row({ space: 4 }) {
                     if (item.label === '关于知时') {
-                      Text(this.aboutVersionValue).fontSize(13).fontColor('#94A3B8')
+                      Text(this.aboutVersionValue).fontSize(13).fontColor(AppColors.TEXT_HINT)
                     } else if (item.value.length > 0) {
-                      Text(item.value).fontSize(13).fontColor('#94A3B8')
+                      Text(item.value).fontSize(13).fontColor(AppColors.TEXT_HINT)
                     }
-                    Text('>').fontSize(16).fontColor('#CBD5E1')
+                    Text('>').fontSize(16).fontColor(AppColors.MUTED)
                   }
                 }
                 .width('100%').height(52).padding({ left: 16, right: 12 })
@@ -529,10 +710,10 @@ export struct SettingsPage {
                     promptAction.showToast({ message: '功能暂不可用，请稍后重试' })
                   }
                 })
-                .border({ width: { bottom: idx < this.group3.length - 1 ? 0.5 : 0 }, color: '#F1F5F9' })
+                .border({ width: { bottom: idx < this.group3.length - 1 ? 0.5 : 0 }, color: AppColors.DIVIDER })
               })
             }
-            .width('100%').backgroundColor('#FFFFFF').borderRadius(16)
+            .width('100%').backgroundColor(AppColors.BG_CARD).borderRadius(16)
 
             Blank().height(20)
           }
@@ -540,19 +721,19 @@ export struct SettingsPage {
         }
         .layoutWeight(1).scrollBar(BarState.Off)
       }
-      .width('100%').height('100%').backgroundColor('#F8FAFC')
+      .width('100%').height('100%').backgroundColor(AppColors.BG_PRIMARY)
 
       // 铃声选择弹出层
       if (this.showRingtonePicker) {
         Column() {
           Column() {
             Column({ space: 0 }) {
-              Text('选择铃声').fontSize(18).fontWeight(FontWeight.Bold).fontColor('#1E293B')
+              Text('选择铃声').fontSize(18).fontWeight(FontWeight.Bold).fontColor(AppColors.TEXT_PRIMARY)
                 .width('100%').padding({ left: 20, right: 20, top: 20, bottom: 12 })
 
               ForEach(this.ringtoneOptions, (option: RingtoneOption) => {
                 Row() {
-                  Text(option.label).fontSize(16).fontColor('#1E293B').layoutWeight(1)
+                  Text(option.label).fontSize(16).fontColor(AppColors.TEXT_PRIMARY).layoutWeight(1)
                   if (option.name === 'default' && this.ringtoneLabel === '默认提示音') {
                     Text('✓').fontSize(18).fontColor(AppColors.PRIMARY)
                   }
@@ -564,13 +745,13 @@ export struct SettingsPage {
               Blank().height(8)
             }
             .width('100%')
-            .backgroundColor('#FFFFFF').borderRadius({ topLeft: 16, topRight: 16 })
+            .backgroundColor(AppColors.BG_CARD).borderRadius({ topLeft: 16, topRight: 16 })
 
             Row() {
-              Text('取消').fontSize(16).fontColor('#64748B')
+              Text('取消').fontSize(16).fontColor(AppColors.TEXT_SECONDARY)
             }
             .width('100%').height(52)
-            .backgroundColor('#FFFFFF').borderRadius({ bottomLeft: 16, bottomRight: 16 })
+            .backgroundColor(AppColors.BG_CARD).borderRadius({ bottomLeft: 16, bottomRight: 16 })
             .margin({ top: 1 })
             .justifyContent(FlexAlign.Center)
             .onClick(() => { this.showRingtonePicker = false })
@@ -578,7 +759,7 @@ export struct SettingsPage {
           .width('100%')
         }
         .width('100%').height('100%')
-        .backgroundColor('#00000050')
+        .backgroundColor(AppColors.MASK)
         .justifyContent(FlexAlign.End)
         .onClick(() => { this.showRingtonePicker = false })
       }
@@ -588,12 +769,12 @@ export struct SettingsPage {
         Column() {
           Column() {
             Column({ space: 0 }) {
-              Text('默认时长').fontSize(18).fontWeight(FontWeight.Bold).fontColor('#1E293B')
+              Text('默认时长').fontSize(18).fontWeight(FontWeight.Bold).fontColor(AppColors.TEXT_PRIMARY)
                 .width('100%').padding({ left: 20, right: 20, top: 20, bottom: 12 })
 
               ForEach(this.durationOptions, (d: number) => {
                 Row() {
-                  Text(`${d} 分钟`).fontSize(16).fontColor('#1E293B').layoutWeight(1)
+                  Text(`${d} 分钟`).fontSize(16).fontColor(AppColors.TEXT_PRIMARY).layoutWeight(1)
                   if (d === this.defaultDuration) {
                     Text('✓').fontSize(18).fontColor(AppColors.PRIMARY)
                   }
@@ -605,13 +786,13 @@ export struct SettingsPage {
               Blank().height(8)
             }
             .width('100%')
-            .backgroundColor('#FFFFFF').borderRadius({ topLeft: 16, topRight: 16 })
+            .backgroundColor(AppColors.BG_CARD).borderRadius({ topLeft: 16, topRight: 16 })
 
             Row() {
-              Text('取消').fontSize(16).fontColor('#64748B')
+              Text('取消').fontSize(16).fontColor(AppColors.TEXT_SECONDARY)
             }
             .width('100%').height(52)
-            .backgroundColor('#FFFFFF').borderRadius({ bottomLeft: 16, bottomRight: 16 })
+            .backgroundColor(AppColors.BG_CARD).borderRadius({ bottomLeft: 16, bottomRight: 16 })
             .margin({ top: 1 })
             .justifyContent(FlexAlign.Center)
             .onClick(() => { this.showDurationPicker = false })
@@ -619,9 +800,196 @@ export struct SettingsPage {
           .width('100%')
         }
         .width('100%').height('100%')
-        .backgroundColor('#00000050')
+        .backgroundColor(AppColors.MASK)
         .justifyContent(FlexAlign.End)
         .onClick(() => { this.showDurationPicker = false })
+      }
+
+      // 每日目标选择弹出层
+      if (this.showGoalPicker) {
+        Column() {
+          Column() {
+            Column({ space: 0 }) {
+              Text('每日目标').fontSize(18).fontWeight(FontWeight.Bold).fontColor(AppColors.TEXT_PRIMARY)
+                .width('100%').padding({ left: 20, right: 20, top: 20, bottom: 12 })
+
+              ForEach(this.goalOptions, (d: number) => {
+                Row() {
+                  Text(`${d} 分钟`).fontSize(16).fontColor(AppColors.TEXT_PRIMARY).layoutWeight(1)
+                  if (d === this.dailyGoal) {
+                    Text('✓').fontSize(18).fontColor(AppColors.PRIMARY)
+                  }
+                }
+                .width('100%').height(48).padding({ left: 20, right: 20 })
+                .onClick(() => { this.onSelectGoal(d) })
+              })
+
+              Blank().height(8)
+            }
+            .width('100%')
+            .backgroundColor(AppColors.BG_CARD).borderRadius({ topLeft: 16, topRight: 16 })
+
+            Row() {
+              Text('取消').fontSize(16).fontColor(AppColors.TEXT_SECONDARY)
+            }
+            .width('100%').height(52)
+            .backgroundColor(AppColors.BG_CARD).borderRadius({ bottomLeft: 16, bottomRight: 16 })
+            .margin({ top: 1 })
+            .justifyContent(FlexAlign.Center)
+            .onClick(() => { this.showGoalPicker = false })
+          }
+          .width('100%')
+        }
+        .width('100%').height('100%')
+        .backgroundColor(AppColors.MASK)
+        .justifyContent(FlexAlign.End)
+        .onClick(() => { this.showGoalPicker = false })
+      }
+
+      // 标签管理弹出层
+      if (this.showTagManager) {
+        Column() {
+          Column() {
+            Column({ space: 0 }) {
+              Text('标签管理').fontSize(18).fontWeight(FontWeight.Bold).fontColor(AppColors.TEXT_PRIMARY)
+                .width('100%').padding({ left: 20, right: 20, top: 20, bottom: 12 })
+
+              Flex({ wrap: FlexWrap.Wrap }) {
+                ForEach(this.manageTags, (tag: string) => {
+                  Row({ space: 6 }) {
+                    Text(tag).fontSize(14).fontColor(AppColors.TEXT_BODY)
+                    Text('×')
+                      .fontSize(16).fontColor(AppColors.TEXT_HINT)
+                      .padding({ left: 2, right: 2 })
+                      .onClick(() => { this.onRemoveTag(tag) })
+                  }
+                  .padding({ left: 12, right: 8, top: 6, bottom: 6 })
+                  .margin({ right: 8, bottom: 8 })
+                  .backgroundColor(AppColors.DIVIDER)
+                  .borderRadius(16)
+                })
+              }
+              .width('100%').padding({ left: 20, right: 20 })
+
+              Row({ space: 8 }) {
+                TextInput({ placeholder: '新标签（最多8个字）', text: this.newTagInput })
+                  .fontSize(14).fontColor(AppColors.TEXT_BODY).placeholderColor(AppColors.MUTED)
+                  .backgroundColor(AppColors.DIVIDER).borderRadius(10)
+                  .layoutWeight(1).height(40)
+                  .maxLength(TAG_MAX_LENGTH)
+                  .onChange((value: string) => { this.newTagInput = value })
+                Text('添加')
+                  .fontSize(14).fontWeight(FontWeight.Medium).fontColor(AppColors.ON_ACCENT)
+                  .padding({ left: 16, right: 16, top: 9, bottom: 9 })
+                  .backgroundColor(AppColors.PRIMARY).borderRadius(10)
+                  .onClick(() => { this.onAddTag() })
+              }
+              .width('100%').padding({ left: 20, right: 20, top: 12 })
+
+              Blank().height(8)
+            }
+            .width('100%')
+            .backgroundColor(AppColors.BG_CARD).borderRadius({ topLeft: 16, topRight: 16 })
+
+            Row() {
+              Text('完成').fontSize(16).fontColor(AppColors.TEXT_SECONDARY)
+            }
+            .width('100%').height(52)
+            .backgroundColor(AppColors.BG_CARD).borderRadius({ bottomLeft: 16, bottomRight: 16 })
+            .margin({ top: 1 })
+            .justifyContent(FlexAlign.Center)
+            .onClick(() => { this.showTagManager = false })
+          }
+          .width('100%')
+          // 拦截面板区域内的点击，避免冒泡到遮罩层误关弹窗（TextInput 聚焦需要）
+          .onClick(() => {})
+        }
+        .width('100%').height('100%')
+        .backgroundColor(AppColors.MASK)
+        .justifyContent(FlexAlign.End)
+        .onClick(() => { this.showTagManager = false })
+      }
+
+      // 深色模式选择弹出层
+      if (this.showThemePicker) {
+        Column() {
+          Column() {
+            Column({ space: 0 }) {
+              Text('深色模式').fontSize(18).fontWeight(FontWeight.Bold).fontColor(AppColors.TEXT_PRIMARY)
+                .width('100%').padding({ left: 20, right: 20, top: 20, bottom: 12 })
+
+              ForEach(this.themeOptions, (option: ThemeOption) => {
+                Row() {
+                  Text(option.label).fontSize(16).fontColor(AppColors.TEXT_PRIMARY).layoutWeight(1)
+                  if (option.label === this.themeModeLabel) {
+                    Text('✓').fontSize(18).fontColor(AppColors.PRIMARY)
+                  }
+                }
+                .width('100%').height(48).padding({ left: 20, right: 20 })
+                .onClick(() => { this.onSelectTheme(option) })
+              })
+
+              Blank().height(8)
+            }
+            .width('100%')
+            .backgroundColor(AppColors.BG_CARD).borderRadius({ topLeft: 16, topRight: 16 })
+
+            Row() {
+              Text('取消').fontSize(16).fontColor(AppColors.TEXT_SECONDARY)
+            }
+            .width('100%').height(52)
+            .backgroundColor(AppColors.BG_CARD).borderRadius({ bottomLeft: 16, bottomRight: 16 })
+            .margin({ top: 1 })
+            .justifyContent(FlexAlign.Center)
+            .onClick(() => { this.showThemePicker = false })
+          }
+          .width('100%')
+        }
+        .width('100%').height('100%')
+        .backgroundColor(AppColors.MASK)
+        .justifyContent(FlexAlign.End)
+        .onClick(() => { this.showThemePicker = false })
+      }
+
+      // 环境白噪音选择弹出层
+      if (this.showWhiteNoisePicker) {
+        Column() {
+          Column() {
+            Column({ space: 0 }) {
+              Text('环境白噪音').fontSize(18).fontWeight(FontWeight.Bold).fontColor(AppColors.TEXT_PRIMARY)
+                .width('100%').padding({ left: 20, right: 20, top: 20, bottom: 12 })
+
+              ForEach(this.whiteNoiseOptions, (option: WhiteNoiseOption) => {
+                Row() {
+                  Text(option.label).fontSize(16).fontColor(AppColors.TEXT_PRIMARY).layoutWeight(1)
+                  if (option.label === this.whiteNoiseLabel) {
+                    Text('✓').fontSize(18).fontColor(AppColors.PRIMARY)
+                  }
+                }
+                .width('100%').height(48).padding({ left: 20, right: 20 })
+                .onClick(() => { this.onSelectWhiteNoise(option) })
+              })
+
+              Blank().height(8)
+            }
+            .width('100%')
+            .backgroundColor(AppColors.BG_CARD).borderRadius({ topLeft: 16, topRight: 16 })
+
+            Row() {
+              Text('取消').fontSize(16).fontColor(AppColors.TEXT_SECONDARY)
+            }
+            .width('100%').height(52)
+            .backgroundColor(AppColors.BG_CARD).borderRadius({ bottomLeft: 16, bottomRight: 16 })
+            .margin({ top: 1 })
+            .justifyContent(FlexAlign.Center)
+            .onClick(() => { this.showWhiteNoisePicker = false })
+          }
+          .width('100%')
+        }
+        .width('100%').height('100%')
+        .backgroundColor(AppColors.MASK)
+        .justifyContent(FlexAlign.End)
+        .onClick(() => { this.showWhiteNoisePicker = false })
       }
     }
     .width('100%').height('100%')

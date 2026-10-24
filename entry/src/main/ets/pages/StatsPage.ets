@@ -6,6 +6,7 @@ import { common } from '@kit.AbilityKit'
 @Entry
 @Component
 export struct StatsPage {
+  @StorageLink('isDarkMode') isDarkMode: boolean = false
   @Prop @Watch('onRefresh') refreshKey: number = 0
   @State selectedTab: string = '日'
   private tabs: string[] = ['日', '周', '月']
@@ -87,62 +88,62 @@ export struct StatsPage {
   build() {
     Column() {
       Row() {
-        Text('统计').fontSize(22).fontWeight(FontWeight.Bold).fontColor('#1E293B')
+        Text('统计').fontSize(22).fontWeight(FontWeight.Bold).fontColor(AppColors.TEXT_PRIMARY)
         Blank()
       }
-      .width('100%').padding({ left: 20, right: 20, top: 14, bottom: 8 }).backgroundColor('#FFFFFF')
+      .width('100%').padding({ left: 20, right: 20, top: 14, bottom: 8 }).backgroundColor(AppColors.BG_CARD)
 
       Row({ space: 0 }) {
         ForEach(this.tabs, (tab: string) => {
           Text(tab)
             .fontSize(15)
             .fontWeight(this.selectedTab === tab ? FontWeight.Bold : FontWeight.Normal)
-            .fontColor(this.selectedTab === tab ? AppColors.PRIMARY : '#94A3B8')
+            .fontColor(this.selectedTab === tab ? AppColors.PRIMARY : AppColors.TEXT_HINT)
             .layoutWeight(1).textAlign(TextAlign.Center)
             .padding({ top: 14, bottom: 10 })
             .onClick(() => { this.onTabChange(tab) })
         })
       }
-      .width('100%').backgroundColor('#FFFFFF')
-      .border({ width: { bottom: 0.5 }, color: '#E2E8F0' })
+      .width('100%').backgroundColor(AppColors.BG_CARD)
+      .border({ width: { bottom: 0.5 }, color: AppColors.BORDER })
 
       Scroll() {
         Column({ space: 24 }) {
           Row({ space: 12 }) {
             Column() {
-              Text(`${this.getLabel()}专注`).fontSize(12).fontColor('#94A3B8')
-              Text(this.selectedTab === '日' ? `${this.dayTotal}` : 
+              Text(`${this.getLabel()}专注`).fontSize(12).fontColor(AppColors.TEXT_HINT)
+              Text(this.selectedTab === '日' ? `${this.dayTotal}` :
                   this.selectedTab === '周' ? `${this.weekTotal}` : `${this.monthTotal}`)
-                .fontSize(36).fontWeight(FontWeight.Bold).fontColor('#1A73E8')
-              Text('分钟').fontSize(12).fontColor('#94A3B8')
-            }.layoutWeight(1).padding(20).backgroundColor('#FFFFFF').borderRadius(16)
+                .fontSize(36).fontWeight(FontWeight.Bold).fontColor(AppColors.PRIMARY)
+              Text('分钟').fontSize(12).fontColor(AppColors.TEXT_HINT)
+            }.layoutWeight(1).padding(20).backgroundColor(AppColors.BG_CARD).borderRadius(16)
 
             Column() {
-              Text(`${this.getLabel()}次数`).fontSize(12).fontColor('#94A3B8')
-              Text(this.selectedTab === '日' ? `${this.dayCount}` : 
+              Text(`${this.getLabel()}次数`).fontSize(12).fontColor(AppColors.TEXT_HINT)
+              Text(this.selectedTab === '日' ? `${this.dayCount}` :
                   this.selectedTab === '周' ? `${this.weekCount}` : `${this.monthCount}`)
-                .fontSize(36).fontWeight(FontWeight.Bold).fontColor('#0D9488')
-              Text('次').fontSize(12).fontColor('#94A3B8')
-            }.layoutWeight(1).padding(20).backgroundColor('#FFFFFF').borderRadius(16)
+                .fontSize(36).fontWeight(FontWeight.Bold).fontColor(AppColors.FOCUS_ACTIVE)
+              Text('次').fontSize(12).fontColor(AppColors.TEXT_HINT)
+            }.layoutWeight(1).padding(20).backgroundColor(AppColors.BG_CARD).borderRadius(16)
           }
           .width('100%')
 
           Column({ space: 12 }) {
-            Text('使用习惯').fontSize(15).fontWeight(FontWeight.Medium).fontColor('#1E293B')
+            Text('使用习惯').fontSize(15).fontWeight(FontWeight.Medium).fontColor(AppColors.TEXT_PRIMARY)
             Column({ space: 10 }) {
-              Row() { Text('日均专注').fontSize(13).fontColor('#64748B').layoutWeight(1); Text(this.formatHours(this.overview.averageDailyMinutes)).fontSize(15).fontWeight(FontWeight.Medium).fontColor('#1E293B') }.width('100%')
-              Row() { Text('平均每次').fontSize(13).fontColor('#64748B').layoutWeight(1); Text(this.formatHours(this.overview.averageSessionMinutes)).fontSize(15).fontWeight(FontWeight.Medium).fontColor('#1E293B') }.width('100%')
-              Row() { Text('最高产时段').fontSize(13).fontColor('#64748B').layoutWeight(1); Text(`${this.overview.mostProductiveHour}:00 - ${this.overview.mostProductiveHour + 1}:00`).fontSize(15).fontWeight(FontWeight.Medium).fontColor('#1E293B') }.width('100%')
-              Row() { Text('当前连续').fontSize(13).fontColor('#64748B').layoutWeight(1); Text(`${this.overview.currentStreak} 天`).fontSize(15).fontWeight(FontWeight.Medium).fontColor('#F59E0B') }.width('100%')
-              Row() { Text('最长连续').fontSize(13).fontColor('#64748B').layoutWeight(1); Text(`${this.overview.longestStreak} 天`).fontSize(15).fontWeight(FontWeight.Medium).fontColor('#1E293B') }.width('100%')
+              Row() { Text('日均专注').fontSize(13).fontColor(AppColors.TEXT_SECONDARY).layoutWeight(1); Text(this.formatHours(this.overview.averageDailyMinutes)).fontSize(15).fontWeight(FontWeight.Medium).fontColor(AppColors.TEXT_PRIMARY) }.width('100%')
+              Row() { Text('平均每次').fontSize(13).fontColor(AppColors.TEXT_SECONDARY).layoutWeight(1); Text(this.formatHours(this.overview.averageSessionMinutes)).fontSize(15).fontWeight(FontWeight.Medium).fontColor(AppColors.TEXT_PRIMARY) }.width('100%')
+              Row() { Text('最高产时段').fontSize(13).fontColor(AppColors.TEXT_SECONDARY).layoutWeight(1); Text(`${this.overview.mostProductiveHour}:00 - ${this.overview.mostProductiveHour + 1}:00`).fontSize(15).fontWeight(FontWeight.Medium).fontColor(AppColors.TEXT_PRIMARY) }.width('100%')
+              Row() { Text('当前连续').fontSize(13).fontColor(AppColors.TEXT_SECONDARY).layoutWeight(1); Text(`${this.overview.currentStreak} 天`).fontSize(15).fontWeight(FontWeight.Medium).fontColor(AppColors.WARNING) }.width('100%')
+              Row() { Text('最长连续').fontSize(13).fontColor(AppColors.TEXT_SECONDARY).layoutWeight(1); Text(`${this.overview.longestStreak} 天`).fontSize(15).fontWeight(FontWeight.Medium).fontColor(AppColors.TEXT_PRIMARY) }.width('100%')
             }
-            .width('100%').padding(16).backgroundColor('#FFFFFF').borderRadius(12)
+            .width('100%').padding(16).backgroundColor(AppColors.BG_CARD).borderRadius(12)
           }
-          .width('100%').padding(20).backgroundColor('#F8FAFC').borderRadius(16)
+          .width('100%').padding(20).backgroundColor(AppColors.BG_PRIMARY).borderRadius(16)
 
           if (this.dailyList.length > 0) {
             Column({ space: 10 }) {
-              Text(`${this.getLabel()}分布`).fontSize(15).fontWeight(FontWeight.Medium).fontColor('#1E293B')
+              Text(`${this.getLabel()}分布`).fontSize(15).fontWeight(FontWeight.Medium).fontColor(AppColors.TEXT_PRIMARY)
               Scroll() {
                 Row({ space: 2 }) {
                   ForEach(this.dailyList, (item: DailyStats) => {
@@ -152,14 +153,14 @@ export struct StatsPage {
                         .fontSize(item.totalMinutes > 0
                           ? this.getAdaptiveFontSize(this.formatMinutesShort(item.totalMinutes), 16, 10, 6)
                           : 6)
-                        .fontColor('#475569').maxLines(1).fontWeight(FontWeight.Medium)
+                        .fontColor(AppColors.TEXT_SUBTLE).maxLines(1).fontWeight(FontWeight.Medium)
                       Column() {}
                         .width(14)
                         .height(Math.max(4, (item.totalMinutes / Math.max(this.getMaxDailyMinutes(), 1)) * 100))
-                        .backgroundColor(item.totalMinutes > 0 ? '#1A73E8' : '#E2E8F0')
+                        .backgroundColor(item.totalMinutes > 0 ? AppColors.PRIMARY : AppColors.BORDER)
                         .borderRadius(3)
                       Text(item.totalMinutes > 0 ? `${item.totalMinutes}` : '')
-                        .fontSize(7).fontColor('#94A3B8').maxLines(1)
+                        .fontSize(7).fontColor(AppColors.TEXT_HINT).maxLines(1)
                     }
                     .alignItems(HorizontalAlign.Center)
                   })
@@ -168,12 +169,12 @@ export struct StatsPage {
               }
               .width('100%').height(150).scrollable(ScrollDirection.Horizontal).scrollBar(BarState.Off)
             }
-            .width('100%').padding(20).backgroundColor('#FFFFFF').borderRadius(16)
+            .width('100%').padding(20).backgroundColor(AppColors.BG_CARD).borderRadius(16)
           }
 
           if (this.hourlyDist.some((v: number) => v > 0)) {
             Column({ space: 10 }) {
-              Text('时段分布').fontSize(15).fontWeight(FontWeight.Medium).fontColor('#1E293B')
+              Text('时段分布').fontSize(15).fontWeight(FontWeight.Medium).fontColor(AppColors.TEXT_PRIMARY)
               Scroll() {
                 Row({ space: 1 }) {
                   ForEach(this.hourlyDist, (val: number, idx: number) => {
@@ -183,13 +184,13 @@ export struct StatsPage {
                         .fontSize(val > 0
                           ? this.getAdaptiveFontSize(this.formatMinutesShort(val), 12, 8, 5)
                           : 5)
-                        .fontColor('#475569').maxLines(1).fontWeight(FontWeight.Medium)
+                        .fontColor(AppColors.TEXT_SUBTLE).maxLines(1).fontWeight(FontWeight.Medium)
                       Column() {}
                         .width(10)
                         .height(Math.max(2, (val / Math.max(...this.hourlyDist, 1)) * 60))
-                        .backgroundColor(val > 0 ? '#3B82F6' : '#F1F5F9')
+                        .backgroundColor(val > 0 ? AppColors.ACCENT_BLUE : AppColors.DIVIDER)
                         .borderRadius(2)
-                      if (idx % 2 === 0) { Text(`${idx}`).fontSize(7).fontColor('#CBD5E1') }
+                      if (idx % 2 === 0) { Text(`${idx}`).fontSize(7).fontColor(AppColors.MUTED) }
                     }
                     .alignItems(HorizontalAlign.Center)
                   })
@@ -198,27 +199,27 @@ export struct StatsPage {
               }
               .width('100%').height(110).scrollable(ScrollDirection.Horizontal).scrollBar(BarState.Off)
             }
-            .width('100%').padding(20).backgroundColor('#FFFFFF').borderRadius(16)
+            .width('100%').padding(20).backgroundColor(AppColors.BG_CARD).borderRadius(16)
           }
 
           if (Object.keys(this.tagDistribution).length > 0) {
             Column({ space: 12 }) {
-              Text('标签分布').fontSize(15).fontWeight(FontWeight.Medium).fontColor('#1E293B')
+              Text('标签分布').fontSize(15).fontWeight(FontWeight.Medium).fontColor(AppColors.TEXT_PRIMARY)
               Column({ space: 10 }) {
                 ForEach(Object.keys(this.tagDistribution).sort(), (key: string) => {
                   Row({ space: 10 }) {
-                    Text(key).fontSize(13).fontColor('#334155').width(50)
+                    Text(key).fontSize(13).fontColor(AppColors.TEXT_BODY).width(50)
                     Row() {
                       Row() {}
                         .width(`${Math.min((this.tagDistribution[key] / Math.max(this.getTotalTagMins(), 1)) * 100, 100)}%`)
-                        .height('100%').backgroundColor('#1A73E8').borderRadius(4)
-                    }.layoutWeight(1).height(10).backgroundColor('#F1F5F9').borderRadius(4)
-                    Text(`${this.tagDistribution[key]}m`).fontSize(12).fontColor('#94A3B8').width(36)
+                        .height('100%').backgroundColor(AppColors.PRIMARY).borderRadius(4)
+                    }.layoutWeight(1).height(10).backgroundColor(AppColors.DIVIDER).borderRadius(4)
+                    Text(`${this.tagDistribution[key]}m`).fontSize(12).fontColor(AppColors.TEXT_HINT).width(36)
                   }.width('100%')
                 })
               }
             }
-            .width('100%').padding(20).backgroundColor('#FFFFFF').borderRadius(16)
+            .width('100%').padding(20).backgroundColor(AppColors.BG_CARD).borderRadius(16)
           }
 
           Blank().height(20)
@@ -227,7 +228,7 @@ export struct StatsPage {
       }
       .layoutWeight(1).scrollBar(BarState.Off)
     }
-    .width('100%').height('100%').backgroundColor('#F8FAFC')
+    .width('100%').height('100%').backgroundColor(AppColors.BG_PRIMARY)
   }
 
   private getMaxDailyMinutes(): number {

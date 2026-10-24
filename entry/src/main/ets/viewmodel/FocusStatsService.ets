@@ -178,6 +178,26 @@ export class FocusStatsService {
     return hours
   }
 
+  /**
+   * 连续达标天数：从今天开始往前逐天统计"当天总专注分钟数 >= goalMinutes"的连续天数。
+   * 今天未达标不断链，从昨天往前算（与 calcCurrentStreak 的口径一致）。
+   */
+  async calcGoalStreak(goalMinutes: number): Promise<number> {
+    if (goalMinutes <= 0) return 0
+    let streak = 0
+    const now = new Date()
+    for (let i = 0; i < 365; i++) {
+      const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i)
+      d.setHours(0, 0, 0, 0)
+      const from = d.getTime()
+      const minutes = await this.db.getTotalMinutes(from, from + 86400000)
+      if (minutes >= goalMinutes) { streak++ }
+      else if (i === 0) { continue }
+      else { break }
+    }
+    return streak
+  }
+
   private async calcCurrentStreak(): Promise<number> {
     let streak = 0
     const now = new Date()

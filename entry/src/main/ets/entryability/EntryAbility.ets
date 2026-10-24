@@ -1,4 +1,4 @@
-import { AbilityConstant, ConfigurationConstant, UIAbility, Want } from '@kit.AbilityKit'
+import { AbilityConstant, Configuration, UIAbility, Want } from '@kit.AbilityKit'
 import { hilog } from '@kit.PerformanceAnalysisKit'
 import { window } from '@kit.ArkUI'
 import { common } from '@kit.AbilityKit'
@@ -8,17 +8,18 @@ import notificationManager from '@ohos.notificationManager'
 import { ScreenStateService, LOCK_SAFE_DOMAIN, LOCK_SAFE_TAG } from '../services/ScreenStateService'
 import { LockSafeStartupCoordinator } from '../services/LockSafeStartupCoordinator'
 import { ReminderActionAdapter } from '../services/ReminderActionAdapter'
+import { ThemeService } from '../services/ThemeService'
+import { WhiteNoiseService } from '../services/WhiteNoiseService'
 
 const DOMAIN = LOCK_SAFE_DOMAIN
 const TAG = LOCK_SAFE_TAG
 
 export default class EntryAbility extends UIAbility {
   onCreate(want: Want, launchParam: AbilityConstant.LaunchParam): void {
-    try {
-      this.context.getApplicationContext().setColorMode(ConfigurationConstant.ColorMode.COLOR_MODE_NOT_SET)
-    } catch (err) {
-      hilog.error(DOMAIN, TAG, 'Failed to set colorMode. Cause: %{public}s', JSON.stringify(err))
-    }
+    // 初始化主题服务：读取 theme_mode 偏好并应用深浅色（以 ThemeService 为准）
+    ThemeService.getInstance().init(this.context as common.UIAbilityContext).catch((e: Error) => {
+      hilog.error(DOMAIN, TAG, 'ThemeService init failed: %{public}s', e.message)
+    })
     // 初始化埋点服务
     AnalyticsService.getInstance().init(this.context as common.UIAbilityContext)
     // 注册通知槽位（支持响铃）
@@ -139,6 +140,13 @@ export default class EntryAbility extends UIAbility {
 
   onBackground(): void {
     AnalyticsService.getInstance().onBackground()
+    // 兜底：应用退后台立即停止白噪音（仅承诺前台专注中播放，无后台保活）
+    WhiteNoiseService.getInstance().stop()
     hilog.info(DOMAIN, TAG, '%{public}s', 'Ability onBackground')
+  }
+
+  /** 系统配置变化（深浅色等）：跟随系统模式下重新解析主题 */
+  onConfigurationUpdate(newConfig: Configuration): void {
+    ThemeService.getInstance().onSystemConfigChange(this.context as common.UIAbilityContext)
   }
 }

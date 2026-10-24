@@ -1,11 +1,13 @@
 /*
  * TimerRing - 环形进度（增强版，支持动画）
  */
+import { AppColors } from '../common/Theme'
+
 @Component
 export struct TimerRing {
   @Prop elapsedSeconds: number = 0
   @Prop totalSeconds: number = 1500
-  @Prop ringColor: string = '#0D9488'
+  @Prop ringColor: string = AppColors.FOCUS_ACTIVE
   @Prop ringWidth: number = 14
   @Prop ringSize: number = 220
 
@@ -14,7 +16,7 @@ export struct TimerRing {
       // 底层轨道
       Circle()
         .fill(Color.Transparent)
-        .stroke('#E2E8F0')
+        .stroke(AppColors.BORDER)
         .strokeWidth(this.ringWidth)
         .width(this.ringSize)
         .height(this.ringSize)

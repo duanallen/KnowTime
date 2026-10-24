@@ -3,6 +3,7 @@ import { common } from '@kit.AbilityKit'
 import { PrivacyPreferenceService, DisplayMode } from '../services/PrivacyPreferenceService'
 import { PrivacyPolicyContent, PolicyMeta } from '../services/PrivacyPolicyContent'
 import { AnalyticsService, AnalyticsEvent } from '../analytics/AnalyticsService'
+import { AppColors } from '../common/Theme'
 
 interface PrivacyRouteParams {
   displayMode: string
@@ -11,6 +12,7 @@ interface PrivacyRouteParams {
 @Entry
 @Component
 struct PrivacyPolicyPage {
+  @StorageLink('isDarkMode') isDarkMode: boolean = false
   @State displayMode: string = 'first_launch'
   @State policyText: string = ''
   @State policyVersion: string = ''
@@ -198,8 +200,8 @@ struct PrivacyPolicyPage {
       title: '提示',
       message: '不同意隐私政策将无法使用知时',
       buttons: [
-        { text: '退出应用', color: '#EF4444' },
-        { text: '返回阅读', color: '#3B82F6' }
+        { text: '退出应用', color: AppColors.ERROR },
+        { text: '返回阅读', color: AppColors.ACCENT_BLUE }
       ]
     }).then((result: promptAction.ShowDialogSuccessResponse) => {
       if (result.index === 0) {
