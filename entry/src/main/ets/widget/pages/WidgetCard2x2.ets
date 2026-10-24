@@ -17,14 +17,14 @@ struct WidgetCard2x2 {
           .fontSize(28).fontWeight(FontWeight.Bold).fontColor('#1A73E8')
         Text('今日已专注(分钟)')
           .fontSize(10).fontColor('#94A3B8')
-        Button('开始专注')
+        Button('一键开始专注')
           .fontSize(12).fontColor('#FFFFFF')
           .backgroundColor('#1A73E8').borderRadius(16).height(28)
           .onClick(() => {
             postCardAction(this, {
               action: 'router',
               abilityName: 'EntryAbility',
-              params: { targetPage: 'FocusPage' }
+              params: { targetPage: 'FocusPage', autoStartFocus: 'true' }
             })
           })
       }

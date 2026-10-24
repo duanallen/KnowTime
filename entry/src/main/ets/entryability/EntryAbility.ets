@@ -45,6 +45,37 @@ export default class EntryAbility extends UIAbility {
       }
     })
     hilog.info(DOMAIN, TAG, '%{public}s', 'Ability onCreate')
+
+    // 桌面卡片一键开始专注：冷启动时读取 want 中的标记
+    this.handleLaunchWant(want)
+  }
+
+  /** 应用已在前台/后台时点击卡片路由到本 Ability，走 onNewWant */
+  onNewWant(want: Want, launchParam: AbilityConstant.LaunchParam): void {
+    hilog.info(DOMAIN, TAG, '%{public}s', 'Ability onNewWant')
+    this.handleLaunchWant(want)
+  }
+
+  /** 解析启动 want 中的一键开始专注标记，写入全局令牌供页面消费 */
+  private handleLaunchWant(want: Want): void {
+    try {
+      const params: Record<string, Object> | undefined = want.parameters
+      if (!params) {
+        return
+      }
+      const raw: Object | undefined = params['autoStartFocus']
+      if (raw === undefined) {
+        return
+      }
+      const flag: string = String(raw)
+      if (flag === 'true') {
+        const token: number = Date.now()
+        AppStorage.setOrCreate<number>('autoStartToken', token)
+        hilog.info(DOMAIN, TAG, 'autoStartFocus detected, token=%{public}d', token)
+      }
+    } catch (e) {
+      hilog.error(DOMAIN, TAG, 'handleLaunchWant failed: %{public}s', (e as Error).message)
+    }
   }
 
 

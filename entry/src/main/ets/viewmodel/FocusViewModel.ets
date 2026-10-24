@@ -30,6 +30,8 @@ export class FocusViewModel {
 
   private timerId: number = -1
   private interruptionStartTime: number = 0
+  // 本次暂停的原因，恢复/结束时补录为中断记录后重置
+  private interruptionReason: string = '未标记'
   private reminderTimerId: number = -1
   private reminderCycleId: number = -1
   private reminderVibrationId: number = -1
@@ -222,6 +224,7 @@ export class FocusViewModel {
     this.currentSession = session
     this.elapsedSeconds = 0
     this.accumulatedSeconds = 0
+    this.interruptionReason = '未标记'
     this.focusState = FocusState.RUNNING
     this.startTimer()
     // 等待系统提醒注册结果，决定是否提示用户开启通知
@@ -230,8 +233,13 @@ export class FocusViewModel {
     return reminderRegistered
   }
 
-  pauseSession(): void {
+  /**
+   * 暂停专注
+   * @param reason 中断原因（来电/消息通知/走神/短暂休息/其他），缺省为"未标记"
+   */
+  pauseSession(reason?: string): void {
     if (!this.currentSession || this.focusState !== FocusState.RUNNING) return
+    this.interruptionReason = reason && reason.length > 0 ? reason : '未标记'
     this.currentSession.state = FocusState.PAUSED
     this.focusState = FocusState.PAUSED
     this.interruptionStartTime = Date.now()
@@ -241,6 +249,7 @@ export class FocusViewModel {
     this.analytics.trackFocusPause(this.elapsedSeconds)
   }
 
+  /** 恢复专注：把本次暂停补录为一条带原因的中断记录 */
   resumeSession(): void {
     if (!this.currentSession || this.focusState !== FocusState.PAUSED) return
     const pauseDuration = Math.floor((Date.now() - this.interruptionStartTime) / 1000)
@@ -249,10 +258,11 @@ export class FocusViewModel {
         id: this.generateId(),
         timestamp: this.interruptionStartTime,
         duration: pauseDuration,
-        reason: '用户暂停'
+        reason: this.interruptionReason
       }
       this.currentSession.interruptions.push(ir)
     }
+    this.interruptionReason = '未标记'
     this.currentSession.state = FocusState.RUNNING
     this.focusState = FocusState.RUNNING
     this.accumulatedSeconds = this.elapsedSeconds
@@ -276,10 +286,11 @@ export class FocusViewModel {
           id: this.generateId(),
           timestamp: this.interruptionStartTime,
           duration: pauseDuration,
-          reason: '用户暂停'
+          reason: this.interruptionReason
         })
       }
     }
+    this.interruptionReason = '未标记'
     this.currentSession.endTime = Date.now()
     this.currentSession.actualDuration = this.elapsedSeconds
     this.currentSession.flowScore = this.calculateFlowScore()
@@ -702,6 +713,19 @@ export class FocusViewModel {
     hilog.info(DOMAIN, TAG, 'Reminder stopped')
   }
 
+  /**
+   * 中断原因权重：来电 6、消息通知 10、走神 12、短暂休息 6、其他/未标记 8
+   */
+  private getInterruptionWeight(reason: string): number {
+    switch (reason) {
+      case '来电': return 6
+      case '消息通知': return 10
+      case '走神': return 12
+      case '短暂休息': return 6
+      default: return 8
+    }
+  }
+
   private calculateFlowScore(): number {
     if (!this.currentSession) return 0
     const planned = this.currentSession.plannedDuration
@@ -711,9 +735,15 @@ export class FocusViewModel {
     // 专注深度：以90分钟（5400秒）为满分基准，体现心流沉浸深度，权重60%
     const depthScore = Math.min(actual / 5400, 1)
     const baseScore = completionRate * 40 + depthScore * 60
-    // 中断惩罚：每次中断扣10分，中断会打断心流状态
-    const interruptionCount = this.currentSession.interruptions.length
-    return Math.max(0, Math.min(100, Math.floor(baseScore - interruptionCount * 10)))
+    // 中断惩罚：按"原因权重 × 时长系数"逐条累加，5分钟及以上时长系数翻倍
+    let penalty = 0
+    const interruptions = this.currentSession.interruptions
+    for (let i = 0; i < interruptions.length; i++) {
+      const ir = interruptions[i]
+      const durationFactor = 1 + Math.min(ir.duration / 300, 1)
+      penalty += this.getInterruptionWeight(ir.reason) * durationFactor
+    }
+    return Math.max(0, Math.min(100, Math.floor(baseScore - penalty)))
   }
 
   private triggerVibration(): void {

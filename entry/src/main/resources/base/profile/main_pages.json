@@ -2,6 +2,7 @@
   "src": [
     "pages/Index",
     "pages/PrivacyPolicyPage",
-    "pages/AboutPage"
+    "pages/AboutPage",
+    "pages/WeeklyReportPage"
   ]
 }

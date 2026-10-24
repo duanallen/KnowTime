@@ -172,6 +172,28 @@ export class DatabaseHelper {
     return list
   }
 
+  /** 按时间范围查询中断记录（统计页中断分析用），按发生时间升序 */
+  async queryInterruptionRowsByRange(from: number, to: number): Promise<InterruptionRow[]> {
+    if (!this.store) return []
+    const p = new relationalStore.RdbPredicates(TABLE_INTERRUPTIONS)
+    p.greaterThanOrEqualTo('timestamp', from)
+    p.lessThan('timestamp', to)
+    p.orderByAsc('timestamp')
+    const resultSet = await this.store.query(p)
+    const list: InterruptionRow[] = []
+    while (resultSet.goToNextRow()) {
+      list.push({
+        id: resultSet.getString(resultSet.getColumnIndex('id')),
+        sessionId: resultSet.getString(resultSet.getColumnIndex('session_id')),
+        timestamp: resultSet.getLong(resultSet.getColumnIndex('timestamp')),
+        duration: resultSet.getLong(resultSet.getColumnIndex('duration')),
+        reason: resultSet.getString(resultSet.getColumnIndex('reason'))
+      })
+    }
+    resultSet.close()
+    return list
+  }
+
   private async queryList(predicates: relationalStore.RdbPredicates): Promise<FocusSession[]> {
     if (!this.store) return []
     const resultSet = await this.store.query(predicates)

@@ -9,6 +9,7 @@ import { AnalyticsService } from '../analytics/AnalyticsService'
 @Component
 struct Index {
   @StorageLink('isDarkMode') isDarkMode: boolean = false
+  @StorageLink('autoStartToken') @Watch('onAutoStartToken') autoStartToken: number = 0
   @State currentTabIndex: number = 0
   @Provide refreshKey: number = 0
   private tabIcons: string[] = ['◉', '☰', '⚙', '◈']
@@ -23,6 +24,13 @@ struct Index {
   onPageShow(): void {
     // 页面显示时触发刷新
     this.refreshKey = Date.now()
+  }
+
+  // 桌面卡片一键开始专注：切换到专注页，由 FocusPage 消费令牌自动开始
+  onAutoStartToken(): void {
+    if (this.autoStartToken > 0) {
+      this.currentTabIndex = 0
+    }
   }
 
   build() {

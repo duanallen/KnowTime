@@ -1,7 +1,15 @@
 import { AppColors } from '../common/Theme'
-import { DatabaseHelper } from '../database/DatabaseHelper'
+import { DatabaseHelper, InterruptionRow } from '../database/DatabaseHelper'
 import { FocusStatsService, DailyStats, UsageOverview } from '../viewmodel/FocusStatsService'
 import { common } from '@kit.AbilityKit'
+import { router } from '@kit.ArkUI'
+
+/** 中断分析分组：原因 + 次数 + 累计秒数 */
+interface InterruptionGroup {
+  reason: string
+  count: number
+  seconds: number
+}
 
 @Entry
 @Component
@@ -24,6 +32,10 @@ export struct StatsPage {
   @State weekCount: number = 0
   @State monthTotal: number = 0
   @State monthCount: number = 0
+  // 中断分析
+  @State interruptionTotal: number = 0
+  @State interruptionTotalSeconds: number = 0
+  @State interruptionGroups: InterruptionGroup[] = []
   private db: DatabaseHelper = DatabaseHelper.getInstance()
   private stats: FocusStatsService = FocusStatsService.getInstance()
   private hasInit: boolean = false
@@ -65,6 +77,7 @@ export struct StatsPage {
       this.hourlyDist = await this.stats.getHourlyDistribution(now.getTime(), todayEnd)
       this.dayTotal = await this.db.getTotalMinutes(now.getTime(), todayEnd)
       this.dayCount = await this.db.getSessionCount(now.getTime(), todayEnd)
+      await this.loadInterruptions(now.getTime(), todayEnd)
     } else if (this.selectedTab === '周') {
       const monday = new Date(now)
       const dayOfWeek = now.getDay()
@@ -75,6 +88,7 @@ export struct StatsPage {
       this.hourlyDist = await this.stats.getHourlyDistribution(monday.getTime(), todayEnd)
       this.weekTotal = await this.db.getTotalMinutes(monday.getTime(), todayEnd)
       this.weekCount = await this.db.getSessionCount(monday.getTime(), todayEnd)
+      await this.loadInterruptions(monday.getTime(), todayEnd)
     } else {
       const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).getTime()
       this.dailyList = await this.stats.getDailyStats(30)
@@ -82,7 +96,43 @@ export struct StatsPage {
       this.hourlyDist = await this.stats.getHourlyDistribution(monthStart, todayEnd)
       this.monthTotal = await this.db.getTotalMinutes(monthStart, todayEnd)
       this.monthCount = await this.db.getSessionCount(monthStart, todayEnd)
+      await this.loadInterruptions(monthStart, todayEnd)
     }
+  }
+
+  /** 汇总所选时间范围内的中断：总次数/总时长/按原因分组（按次数降序） */
+  private async loadInterruptions(from: number, to: number): Promise<void> {
+    const rows: InterruptionRow[] = await this.db.queryInterruptionRowsByRange(from, to)
+    let totalSeconds = 0
+    const groups: InterruptionGroup[] = []
+    for (let i = 0; i < rows.length; i++) {
+      const row: InterruptionRow = rows[i]
+      totalSeconds += row.duration
+      let found: number = -1
+      for (let j = 0; j < groups.length; j++) {
+        if (groups[j].reason === row.reason) {
+          found = j
+          break
+        }
+      }
+      if (found >= 0) {
+        groups[found].count += 1
+        groups[found].seconds += row.duration
+      } else {
+        groups.push({ reason: row.reason, count: 1, seconds: row.duration })
+      }
+    }
+    groups.sort((a: InterruptionGroup, b: InterruptionGroup) => b.count - a.count)
+    this.interruptionTotal = rows.length
+    this.interruptionTotalSeconds = totalSeconds
+    this.interruptionGroups = groups
+  }
+
+  /** 中断秒数转分钟文本，1 位小数；10 分钟以上取整 */
+  private formatInterruptionMinutes(seconds: number): string {
+    const m: number = seconds / 60
+    if (m >= 10) return `${Math.round(m)} 分钟`
+    return `${m.toFixed(1)} 分钟`
   }
 
   build() {
@@ -109,6 +159,35 @@ export struct StatsPage {
 
       Scroll() {
         Column({ space: 24 }) {
+          Column() {
+            Row() {
+              Column({ space: 3 }) {
+                Text('本周专注报告')
+                  .fontSize(15)
+                  .fontWeight(FontWeight.Medium)
+                  .fontColor(AppColors.TEXT_PRIMARY)
+                Text('查看本周完整复盘')
+                  .fontSize(12)
+                  .fontColor(AppColors.TEXT_HINT)
+              }
+              .layoutWeight(1)
+              .alignItems(HorizontalAlign.Start)
+
+              Text('>')
+                .fontSize(16)
+                .fontColor(AppColors.MUTED)
+            }
+            .width('100%')
+            .height(64)
+            .padding({ left: 16, right: 12 })
+            .onClick(() => {
+              router.pushUrl({ url: 'pages/WeeklyReportPage' })
+            })
+          }
+          .width('100%')
+          .backgroundColor(AppColors.BG_CARD)
+          .borderRadius(16)
+
           Row({ space: 12 }) {
             Column() {
               Text(`${this.getLabel()}专注`).fontSize(12).fontColor(AppColors.TEXT_HINT)
@@ -201,6 +280,58 @@ export struct StatsPage {
             }
             .width('100%').padding(20).backgroundColor(AppColors.BG_CARD).borderRadius(16)
           }
+
+          // 中断分析
+          Column({ space: 12 }) {
+            Text('中断分析').fontSize(15).fontWeight(FontWeight.Medium).fontColor(AppColors.TEXT_PRIMARY)
+
+            if (this.interruptionTotal === 0) {
+              Text('这段时间没有中断记录').fontSize(13).fontColor(AppColors.TEXT_HINT)
+                .width('100%').padding({ top: 4, bottom: 4 })
+            } else {
+              Row({ space: 12 }) {
+                Column() {
+                  Text(`${this.interruptionTotal}`).fontSize(28).fontWeight(FontWeight.Bold)
+                    .fontColor(AppColors.WARNING)
+                  Text('次中断').fontSize(11).fontColor(AppColors.TEXT_HINT)
+                }
+                .layoutWeight(1).alignItems(HorizontalAlign.Start)
+
+                Column() {
+                  Text(this.formatInterruptionMinutes(this.interruptionTotalSeconds)).fontSize(24)
+                    .fontWeight(FontWeight.Bold).fontColor(AppColors.TEXT_PRIMARY)
+                  Text('总中断时长').fontSize(11).fontColor(AppColors.TEXT_HINT)
+                }
+                .layoutWeight(1).alignItems(HorizontalAlign.Start)
+              }
+              .width('100%').padding({ top: 4, bottom: 4 })
+
+              Column({ space: 10 }) {
+                ForEach(this.interruptionGroups, (group: InterruptionGroup) => {
+                  Column({ space: 6 }) {
+                    Row({ space: 8 }) {
+                      Text(group.reason).fontSize(13).fontColor(AppColors.TEXT_BODY).width(64)
+                      Text(`${group.count} 次`).fontSize(12).fontColor(AppColors.TEXT_HINT)
+                      Blank()
+                      Text(this.formatInterruptionMinutes(group.seconds))
+                        .fontSize(12).fontColor(AppColors.TEXT_SECONDARY)
+                    }
+                    .width('100%')
+
+                    Row() {
+                      Row() {}
+                        .width(`${Math.min((group.count / Math.max(this.interruptionTotal, 1)) * 100, 100)}%`)
+                        .height('100%').backgroundColor(AppColors.WARNING).borderRadius(4)
+                    }
+                    .width('100%').height(8).backgroundColor(AppColors.DIVIDER).borderRadius(4)
+                  }
+                  .width('100%')
+                }, (group: InterruptionGroup) => group.reason)
+              }
+              .width('100%')
+            }
+          }
+          .width('100%').padding(20).backgroundColor(AppColors.BG_CARD).borderRadius(16)
 
           if (Object.keys(this.tagDistribution).length > 0) {
             Column({ space: 12 }) {

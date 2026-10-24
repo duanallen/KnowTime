@@ -16,6 +16,11 @@ interface Palette {
   textHint: string
   border: string
   divider: string
+  heat0: string
+  heat1: string
+  heat2: string
+  heat3: string
+  heat4: string
   success: string
   warning: string
   error: string
@@ -46,6 +51,11 @@ const LIGHT_COLORS: Palette = {
   textHint: '#94A3B8',
   border: '#E2E8F0',
   divider: '#F1F5F9',
+  heat0: '#EEF2F7',
+  heat1: '#DBEAFE',
+  heat2: '#93C5FD',
+  heat3: '#3B82F6',
+  heat4: '#1A73E8',
   success: '#10B981',
   warning: '#F59E0B',
   error: '#EF4444',
@@ -76,6 +86,11 @@ const DARK_COLORS: Palette = {
   textHint: '#64748B',
   border: '#334155',
   divider: '#243349',
+  heat0: '#243349',
+  heat1: '#1E3A5F',
+  heat2: '#1D4ED8',
+  heat3: '#2563EB',
+  heat4: '#60A5FA',
   success: '#10B981',
   warning: '#F59E0B',
   error: '#EF4444',
@@ -121,6 +136,16 @@ export class AppColors {
   static get TEXT_HINT(): string { return AppColors.palette.textHint }
   static get BORDER(): string { return AppColors.palette.border }
   static get DIVIDER(): string { return AppColors.palette.divider }
+  /** 热力图 0 级（无专注） */
+  static get HEAT_0(): string { return AppColors.palette.heat0 }
+  /** 热力图 1 级（1-29 分钟） */
+  static get HEAT_1(): string { return AppColors.palette.heat1 }
+  /** 热力图 2 级（30-59 分钟） */
+  static get HEAT_2(): string { return AppColors.palette.heat2 }
+  /** 热力图 3 级（60-119 分钟） */
+  static get HEAT_3(): string { return AppColors.palette.heat3 }
+  /** 热力图 4 级（≥120 分钟） */
+  static get HEAT_4(): string { return AppColors.palette.heat4 }
   static get SUCCESS(): string { return AppColors.palette.success }
   static get WARNING(): string { return AppColors.palette.warning }
   static get ERROR(): string { return AppColors.palette.error }

@@ -15,6 +15,12 @@ import vibrator from '@ohos.vibrator'
 const DOMAIN = 0x0001
 const TAG = 'FocusPage'
 
+/** 暂停原因选项 */
+interface PauseReasonOption {
+  label: string
+  value: string
+}
+
 @Entry
 @Component
 export struct FocusPage {
@@ -24,6 +30,15 @@ export struct FocusPage {
   @State selectedDuration: number = 25
   @State showCustomDurationDialog: boolean = false
   @State customDurationInput: string = ''
+  // 暂停原因选择面板
+  @State showPauseReasonPanel: boolean = false
+  private pauseReasonOptions: PauseReasonOption[] = [
+    { label: '来电', value: '来电' },
+    { label: '消息通知', value: '消息通知' },
+    { label: '走神', value: '走神' },
+    { label: '短暂休息', value: '短暂休息' },
+    { label: '其他', value: '其他' }
+  ]
   
   // 今日统计 - 使用独立的 @State 变量避免 ViewModel 异步初始化问题
   @State dailyTotalMinutes: number = 0
@@ -42,6 +57,8 @@ export struct FocusPage {
   
   // 刷新机制 - 当此值变化时触发今日统计刷新
   @Prop @Watch('onRefresh') refreshKey: number = 0
+  // 桌面卡片一键开始专注令牌（由 EntryAbility 写入）
+  @StorageLink('autoStartToken') @Watch('onAutoStartToken') autoStartToken: number = 0
   
   // 记录之前的专注状态，用于判断是否完成
   private previousFocusState: FocusState = FocusState.IDLE
@@ -103,6 +120,55 @@ export struct FocusPage {
     this.stateCheckTimerId = setInterval(() => {
       this.syncTimerState()
     }, 500)
+
+    // 冷启动时 onCreate 已写入令牌，@Watch 不会因初始值触发，此处主动检查一次
+    this.tryAutoStartFromCard()
+  }
+
+  // 桌面卡片一键开始专注：令牌变化时尝试自动开始
+  onAutoStartToken(): void {
+    this.tryAutoStartFromCard()
+  }
+
+  private async tryAutoStartFromCard(): Promise<void> {
+    const token: number = this.autoStartToken
+    if (token <= 0) {
+      return
+    }
+    // 用 AppStorage 记录已处理的令牌，避免 Index/FocusPage 双 Watch 或重复回调造成重复开始
+    const handled: number = AppStorage.get<number>('autoStartHandledToken') ?? 0
+    if (handled === token) {
+      return
+    }
+    AppStorage.setOrCreate<number>('autoStartHandledToken', token)
+
+    if (this.viewModel.focusState !== FocusState.IDLE) {
+      promptAction.showToast({ message: '已有专注进行中' })
+      return
+    }
+
+    // 读取设置页默认时长（缺省 25 分钟）
+    try {
+      const ctx = getContext(this) as common.UIAbilityContext
+      const prefs: preferences.Preferences = await preferences.getPreferences(ctx, 'settings_prefs')
+      const defDur: number = await prefs.get('default_duration_minutes', 25) as number
+      if (defDur >= 1 && defDur <= 180) {
+        this.selectedDuration = defDur
+      }
+    } catch (e) {
+      hilog.warn(DOMAIN, TAG, 'auto start load duration failed: %{public}s', (e as Error).message)
+    }
+
+    try {
+      const reminderRegistered: boolean = await this.viewModel.startSession(
+        this.taskName, this.selectedTag, this.selectedDuration * 60, SessionType.DEEP_FOCUS)
+      if (!reminderRegistered) {
+        promptAction.showToast({ message: '系统提醒注册失败，请在 设置→通知 中开启知时的通知权限，否则熄屏后无法响铃' })
+      }
+      this.syncTimerState()
+    } catch (e) {
+      hilog.error(DOMAIN, TAG, 'auto start session failed: %{public}s', (e as Error).message)
+    }
   }
   
   aboutToDisappear(): void {
@@ -501,7 +567,7 @@ export struct FocusPage {
                 Button('暂停')
                   .fontSize(14).fontColor(AppColors.REST)
                   .backgroundColor(AppColors.REST_BG).borderRadius(22).height(44).layoutWeight(1)
-                  .onClick(() => { this.viewModel.pauseSession() })
+                  .onClick(() => { this.showPauseReasonPanel = true })
                 Button('提前结束')
                   .fontSize(14).fontColor(AppColors.ON_ACCENT)
                   .backgroundColor(AppColors.TEXT_HINT).borderRadius(22).height(44).layoutWeight(2)
@@ -584,6 +650,57 @@ export struct FocusPage {
           this.showCustomDurationDialog = false
         })
       }
+
+      // 暂停原因选择面板
+      if (this.showPauseReasonPanel) {
+        Column() {
+          Column() {
+            Column({ space: 0 }) {
+              Text('暂停原因').fontSize(18).fontWeight(FontWeight.Bold).fontColor(AppColors.TEXT_PRIMARY)
+                .width('100%').padding({ left: 20, right: 20, top: 20, bottom: 4 })
+              Text('标记原因，让心流得分更准确').fontSize(12).fontColor(AppColors.TEXT_HINT)
+                .width('100%').padding({ left: 20, right: 20, bottom: 12 })
+
+              ForEach(this.pauseReasonOptions, (option: PauseReasonOption) => {
+                Row() {
+                  Text(option.label).fontSize(16).fontColor(AppColors.TEXT_PRIMARY).layoutWeight(1)
+                  Text('>').fontSize(15).fontColor(AppColors.MUTED)
+                }
+                .width('100%').height(48).padding({ left: 20, right: 20 })
+                .onClick(() => { this.onPauseWithReason(option.value) })
+              }, (option: PauseReasonOption) => option.value)
+
+              Row() {
+                Text('直接暂停').fontSize(16).fontColor(AppColors.TEXT_SECONDARY).layoutWeight(1)
+                Text('不标记原因').fontSize(12).fontColor(AppColors.TEXT_HINT)
+              }
+              .width('100%').height(48).padding({ left: 20, right: 20 })
+              .border({ width: { top: 0.5 }, color: AppColors.DIVIDER })
+              .onClick(() => { this.onPauseWithReason('') })
+
+              Blank().height(8)
+            }
+            .width('100%')
+            .backgroundColor(AppColors.BG_CARD).borderRadius({ topLeft: 16, topRight: 16 })
+
+            Row() {
+              Text('取消').fontSize(16).fontColor(AppColors.TEXT_SECONDARY)
+            }
+            .width('100%').height(52)
+            .backgroundColor(AppColors.BG_CARD).borderRadius({ bottomLeft: 16, bottomRight: 16 })
+            .margin({ top: 1 })
+            .justifyContent(FlexAlign.Center)
+            .onClick(() => { this.showPauseReasonPanel = false })
+          }
+          .width('100%')
+          // 拦截面板内点击，避免冒泡到遮罩误关
+          .onClick(() => {})
+        }
+        .width('100%').height('100%')
+        .backgroundColor(AppColors.MASK)
+        .justifyContent(FlexAlign.End)
+        .onClick(() => { this.showPauseReasonPanel = false })
+      }
     }
     .width('100%').height('100%').backgroundColor(AppColors.BG_PRIMARY)
     
@@ -623,6 +740,13 @@ export struct FocusPage {
       }
     }
   
+  /** 选择暂停原因后暂停；reason 为空表示直接暂停（按"未标记"处理） */
+  private onPauseWithReason(reason: string): void {
+    this.showPauseReasonPanel = false
+    this.viewModel.pauseSession(reason)
+    this.syncTimerState()
+  }
+
   private getTagColor(tag: string): string {
     if (tag === this.selectedTag) return AppColors.ON_ACCENT
     if (this.isLocked()) return AppColors.TEXT_HINT
